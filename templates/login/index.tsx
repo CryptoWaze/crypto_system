@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { loginFormSchema, type LoginFormData } from '@/lib/schemas/login.schema';
 import { login } from '@/lib/services/auth/auth.service';
 import { setUser } from '@/lib/auth-storage';
+import { connectSocket } from '@/lib/services/socket/socket.service';
 
 const REDIRECT_DELAY_MS = 500;
 
