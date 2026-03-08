@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { PageHeader } from '@/components/common/pageHeader';
 import { Loader2 } from 'lucide-react';
 import type { TrackingPayload } from '../types';
@@ -10,6 +11,12 @@ type Step2RastreamentoProps = {
 };
 
 export function Step2Rastreamento({ trackingPayload, trackingLogs }: Step2RastreamentoProps) {
+    const logsEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [trackingLogs]);
+
     return (
         <>
             <PageHeader
@@ -37,6 +44,7 @@ export function Step2Rastreamento({ trackingPayload, trackingLogs }: Step2Rastre
                                 <span className="text-muted-foreground">&gt;</span> {log}
                             </div>
                         ))}
+                        <div ref={logsEndRef} aria-hidden />
                     </div>
                 </div>
             </div>

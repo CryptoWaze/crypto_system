@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE = 'http://localhost:3001';
+const DEFAULT_API_BASE = 'http://localhost:3000';
 
 export function getApiBaseUrl(): string {
     if (typeof window === 'undefined') return DEFAULT_API_BASE;

@@ -61,9 +61,11 @@ export function LoginTemplate() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
-            <div className="mx-auto w-full max-w-sm text-center">
-                <p className="mt-8 text-xs font-medium uppercase tracking-widest text-muted-foreground">Plataforma de investigação</p>
-                <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">CryptoForense</h1>
+            <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card/80 px-8 py-10 text-center shadow-[0_0_40px_-12px_var(--glow-blue)]">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Plataforma de investigação</p>
+                <div className="mt-3 flex justify-center">
+                    <img src="/logo.png" alt="CryptoForense" className="h-12 w-auto sm:h-14" width={180} height={48} />
+                </div>
                 <p className="mt-2 text-sm text-muted-foreground">Acesse sua conta</p>
 
                 <form onSubmit={handleSubmit} className="mt-10 space-y-4 text-left">
@@ -150,6 +152,8 @@ export function LoginTemplate() {
                 </form>
 
                 <p className="mt-6 text-center text-xs text-muted-foreground">Acesso restrito a usuários autorizados.</p>
+            </div>
+            <div className="mx-auto mt-6 w-full max-w-sm text-center">
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                     Voltar para a{' '}
                     <Link href="/" className="text-primary hover:underline">

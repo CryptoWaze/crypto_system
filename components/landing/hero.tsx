@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { GalaxyBackground } from './galaxy-background';
 
 export function Hero() {
     return (
-        <section className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
-            <div className="mx-auto max-w-3xl text-center">
+        <section className="relative flex h-full min-h-0 flex-1 flex-col items-center justify-center overflow-hidden px-6 py-16">
+            <GalaxyBackground />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(91,141,239,0.05),transparent_50%)]" aria-hidden />
+            <div className="relative z-10 mx-auto max-w-3xl text-center">
                 <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Plataforma de investigação</p>
                 <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl">CryptoForense</h1>
                 <p className="mt-4 text-lg text-muted-foreground sm:text-xl">
@@ -15,7 +18,7 @@ export function Hero() {
                 </p>
 
                 <div className="mt-10">
-                    <Button size="lg" asChild>
+                    <Button size="lg" className="shadow-[0_0_24px_-4px_var(--glow-blue)]" asChild>
                         <Link href="/login">Acessar plataforma</Link>
                     </Button>
                 </div>

@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUser } from '@/lib/auth-storage';
 import type { UserResponse } from '@/lib/types/auth';
+import type { FlowToExchangeSuccess, FlowToExchangeFailure } from '@/lib/types/tracking';
+import { getFlowToExchangeByTransaction } from '@/lib/services/tracking/flow-to-exchange.service';
+import { connectSocket } from '@/lib/services/socket/socket.service';
 import { AppHeader } from '@/components/common/appHeader';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/lib/toast-context';
 import type { HashValueRow, TrackingPayload } from './types';
-import { initialRow, nextId, truncateHash, formatStepDuration } from './utils';
+import { initialRow, nextId } from './utils';
 import { Stepper } from './Stepper';
 import { Step1DadosDoCaso } from './steps/Step1DadosDoCaso';
 import { Step2Rastreamento } from './steps/Step2Rastreamento';
@@ -29,6 +32,9 @@ export function NewTrackingTemplate() {
     const [caseNameError, setCaseNameError] = useState<string | null>(null);
     const [dadosError, setDadosError] = useState<string | null>(null);
     const [trackingPayload, setTrackingPayload] = useState<TrackingPayload | null>(null);
+    const [trackingResult, setTrackingResult] = useState<FlowToExchangeSuccess | FlowToExchangeFailure | null>(null);
+    const [trackingError, setTrackingError] = useState<string | null>(null);
+    const traceIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         const u = getUser();
@@ -75,7 +81,12 @@ export function NewTrackingTemplate() {
 
     const handleSubmit = useCallback(() => {
         const name = caseName.trim();
-        const hasValidRow = rows.some((r) => r.hash.trim() !== '' || r.value.trim() !== '');
+        const entries = rows
+            .filter((r) => r.hash.trim() !== '' || r.value.trim() !== '')
+            .map((r) => ({
+                hash: r.hash.trim(),
+                value: r.value.trim() ? parseFloat(r.value.replace(',', '.')) : undefined,
+            }));
 
         setCaseNameError(null);
         setDadosError(null);
@@ -85,84 +96,78 @@ export function NewTrackingTemplate() {
             toast.error('Preencha o nome do caso.');
             return;
         }
-        if (!hasValidRow) {
-            setDadosError('Preencha pelo menos uma linha (hash ou valor da transação).');
-            toast.error('Preencha pelo menos uma linha (hash ou valor da transação).');
+        if (entries.length === 0) {
+            setDadosError('Preencha pelo menos uma linha (hash e valor da transação).');
+            toast.error('Preencha pelo menos uma linha (hash e valor da transação).');
+            return;
+        }
+        const first = entries[0];
+        if (!first.hash.trim()) {
+            setDadosError('Informe a hash da transação na primeira linha.');
+            toast.error('Informe a hash da transação na primeira linha.');
+            return;
+        }
+        if (first.value == null || !Number.isFinite(first.value)) {
+            setDadosError('Informe um valor numérico válido na primeira linha.');
+            toast.error('Informe um valor numérico válido na primeira linha.');
+            return;
+        }
+        const reportedLossAmount = first.value;
+        if (reportedLossAmount <= 0) {
+            setDadosError('O valor da transação na primeira linha deve ser maior que zero.');
+            toast.error('O valor da transação na primeira linha deve ser maior que zero.');
             return;
         }
 
-        const entries = rows
-            .filter((r) => r.hash.trim() !== '' || r.value.trim() !== '')
-            .map((r) => ({
-                hash: r.hash.trim(),
-                value: r.value.trim() ? parseFloat(r.value.replace(',', '.')) : undefined,
-            }));
+        const traceId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : undefined;
+        traceIdRef.current = traceId ?? null;
 
         setTrackingPayload({ caseName: name, entries });
-        setTrackingLogs([]);
+        setTrackingLogs(['Iniciando rastreamento...']);
+        setTrackingResult(null);
+        setTrackingError(null);
         setIsTracking(true);
+
+        (async () => {
+            if (traceId) {
+                try {
+                    const socket = connectSocket();
+                    socket.emit('subscribe-flow-trace', { traceId });
+                    socket.on('flow-trace-progress', (payload: { message?: string }) => {
+                        if (payload?.message) {
+                            setTrackingLogs((prev) => [...prev, payload.message]);
+                        }
+                    });
+                } catch {
+                }
+            }
+
+            const result = await getFlowToExchangeByTransaction(first.hash, reportedLossAmount, traceId ?? undefined);
+
+            setIsTracking(false);
+            setShowResults(true);
+
+            if (result.ok) {
+                setTrackingResult(result.data);
+                setTrackingError(null);
+                setTrackingLogs((prev) => [...prev, 'Rastreamento concluído com sucesso.']);
+            } else if (result.status === 404 && result.data) {
+                setTrackingResult(result.data);
+                setTrackingError(null);
+                setTrackingLogs((prev) => [...prev, `Concluído: ${result.message}`]);
+            } else {
+                setTrackingResult(null);
+                setTrackingError(result.message);
+                toast.error(result.message);
+            }
+        })();
     }, [caseName, rows, toast]);
 
     useEffect(() => {
-        if (!isTracking || !trackingPayload) return;
-
-        const TOTAL_MS = 20000;
-        const { caseName: name, entries } = trackingPayload;
-        const n = entries.length;
-
-        const steps: { delay: number; message: string }[] = [
-            { delay: 0, message: 'Iniciando rastreamento...' },
-            { delay: 200, message: `Caso: "${name}"` },
-            { delay: 500, message: `Entradas: ${n} transação(ões) para rastrear` },
-            ...entries.flatMap((e, i) => [
-                {
-                    delay: 800 + i * 250,
-                    message: `  [${i + 1}] Hash: ${truncateHash(e.hash)}${e.value != null ? ` | Valor: ${e.value}` : ''}`,
-                },
-            ]),
-            { delay: 1500, message: 'Conectando à rede blockchain...' },
-            { delay: 3500, message: `Validando ${n} hash(es) informado(s)...` },
-            { delay: 5500, message: 'Localizando transação(ões) na cadeia...' },
-            ...entries.map((e, i) => ({
-                delay: 7000 + (i * 5000) / Math.max(n, 1),
-                message: `Rastreando transação ${i + 1}/${n}: ${truncateHash(e.hash)}`,
-            })),
-            { delay: 12000, message: 'Mapeando endereços de origem e destino...' },
-            { delay: 14000, message: 'Analisando histórico de carteiras vinculadas...' },
-            { delay: 16000, message: 'Consolidando dados do rastreio...' },
-            { delay: 17500, message: 'Gerando relatório preliminar...' },
-            { delay: 19000, message: 'Finalizando análise...' },
-            { delay: TOTAL_MS, message: `Rastreamento do caso "${name}" concluído com sucesso.` },
-        ];
-
-        const timeouts: ReturnType<typeof setTimeout>[] = [];
-
-        steps.forEach(({ delay, message }, i) => {
-            const isLast = i === steps.length - 1;
-            const nextDelay = isLast ? delay : steps[i + 1].delay;
-            const durationMs = nextDelay - delay;
-            const durationStr = isLast ? '— concluído' : formatStepDuration(durationMs);
-            const line = `${message}  ${durationStr}`;
-            const t = setTimeout(() => {
-                setTrackingLogs((prev) => [...prev, line]);
-            }, delay);
-            timeouts.push(t);
-        });
-
-        const tFinal = setTimeout(() => {
-            setIsTracking(false);
-            setShowResults(true);
-        }, TOTAL_MS);
-        timeouts.push(tFinal);
-
-        return () => timeouts.forEach(clearTimeout);
-    }, [isTracking, trackingPayload]);
-
-    useEffect(() => {
-        if (showResults) {
+        if (showResults && trackingResult?.success === true) {
             toast.success('Rastreamento concluído com sucesso.');
         }
-    }, [showResults, toast]);
+    }, [showResults, trackingResult?.success, toast]);
 
     const currentStep = showResults ? 3 : isTracking ? 2 : 1;
 
@@ -198,9 +203,13 @@ export function NewTrackingTemplate() {
                 {currentStep === 3 && trackingPayload && (
                     <Step3Resultados
                         trackingPayload={trackingPayload}
+                        trackingResult={trackingResult}
+                        trackingError={trackingError}
                         onNovoRastreamento={() => {
                             setShowResults(false);
                             setTrackingPayload(null);
+                            setTrackingResult(null);
+                            setTrackingError(null);
                         }}
                         onMeusCasos={() => setMeusCasosOpen(true)}
                     />
