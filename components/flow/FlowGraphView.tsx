@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useMemo, memo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, memo } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   Position,
   getSmoothStepPath,
   type Node,
@@ -222,12 +223,53 @@ function flowGraphToReactFlow(graph: FlowGraph | FlowGraphWithTimestamps): { nod
   return { nodes, edges };
 }
 
+function FitViewOnce() {
+  const { fitView } = useReactFlow();
+  useEffect(() => {
+    fitView({ padding: 0.2 });
+  }, [fitView]);
+  return null;
+}
+
 type FlowGraphViewProps = {
   graph: FlowGraph | FlowGraphWithTimestamps;
   className?: string;
+  readOnly?: boolean;
 };
 
-export function FlowGraphView({ graph, className }: FlowGraphViewProps) {
+const FlowGraphReadOnly = memo(function FlowGraphReadOnly({ graph, className }: FlowGraphViewProps) {
+  const dataRef = useRef(flowGraphToReactFlow(graph));
+  const { nodes, edges } = dataRef.current;
+  return (
+    <div
+      className={`flow-track-graph ${className ?? 'rounded-xl'}`}
+      style={{
+        backgroundColor: '#303135',
+        width: '100%',
+        height: '100%',
+        minHeight: 480,
+      }}
+    >
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
+        minZoom={0.2}
+        maxZoom={1.5}
+        defaultEdgeOptions={{ type: 'flowTrackSmoothstep' }}
+        edgeTypes={{ flowTrackSmoothstep: FlowTrackSmoothStepEdgeMemo }}
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background gap={16} size={1} color="rgba(255,255,255,0.06)" />
+        <Controls showInteractive={false} />
+      </ReactFlow>
+    </div>
+  );
+});
+
+function FlowGraphViewInteractive({ graph, className }: FlowGraphViewProps) {
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
     () => flowGraphToReactFlow(graph),
     [graph],
@@ -250,25 +292,36 @@ export function FlowGraphView({ graph, className }: FlowGraphViewProps) {
 
   return (
     <div
-      className={`flow-track-graph ${className ?? 'h-[calc(100vh-12rem)] w-full rounded-xl'}`}
-      style={{ backgroundColor: '#303135' }}
+      className={`flow-track-graph ${className ?? 'rounded-xl'}`}
+      style={{
+        backgroundColor: '#303135',
+        width: '100%',
+        height: '100%',
+        minHeight: 480,
+      }}
     >
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChangeHandler}
         onEdgesChange={onEdgesChangeHandler}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
         minZoom={0.2}
         maxZoom={1.5}
         defaultEdgeOptions={{ type: 'flowTrackSmoothstep' }}
         edgeTypes={{ flowTrackSmoothstep: FlowTrackSmoothStepEdgeMemo }}
         proOptions={{ hideAttribution: true }}
       >
+        <FitViewOnce />
         <Background gap={16} size={1} color="rgba(255,255,255,0.06)" />
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>
   );
+}
+
+export function FlowGraphView(props: FlowGraphViewProps) {
+  if (props.readOnly) {
+    return <FlowGraphReadOnly graph={props.graph} className={props.className} />;
+  }
+  return <FlowGraphViewInteractive graph={props.graph} className={props.className} />;
 }

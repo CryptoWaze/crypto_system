@@ -1,16 +1,61 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/common/pageHeader';
+import { useMemo } from 'react';
+import { FlowGraphView, type FlowGraphWithTimestamps } from '@/components/flow/FlowGraphView';
 import type { TrackingPayload } from '../types';
-import type { FlowToExchangeSuccess, FlowToExchangeFailure } from '@/lib/types/tracking';
-import { truncateHash } from '../utils';
+import type { FlowToExchangeSuccess, FlowToExchangeFailure, FlowGraphNode, FlowGraphEdge } from '@/lib/types/tracking';
+import type { FlowStep } from '@/lib/types/tracking';
 
-const REASON_LABELS: Record<string, string> = {
-  NO_OUTBOUND: 'Carteira sem transferências de saída no histórico.',
-  MAX_WALLETS_REACHED: 'Limite de 50 carteiras atingido sem encontrar exchange.',
-  EXHAUSTED_OPTIONS: 'Todos os ramos explorados sem encontrar exchange.',
-};
+function normalizeNode(n: { id?: string; label?: string; address?: string }, i: number) {
+  const id = n.id ?? (n as { address?: string }).address ?? String(i);
+  return { id, label: n.label ?? id };
+}
+
+function buildGraphFromSteps(steps: FlowStep[]): FlowGraphWithTimestamps | null {
+  if (!steps?.length) return null;
+  const seen = new Set<string>();
+  const nodes: FlowGraphNode[] = [];
+  const edges: (FlowGraphEdge & { timestamp?: string })[] = [];
+  for (const step of steps) {
+    for (const addr of [step.fromAddress, step.toAddress]) {
+      if (addr && !seen.has(addr)) {
+        seen.add(addr);
+        nodes.push({ id: addr, label: addr });
+      }
+    }
+    edges.push({
+      from: step.fromAddress,
+      to: step.toAddress,
+      symbol: step.transfer.symbol,
+      amount: step.transfer.amount,
+      amountRaw: step.transfer.rawAmount,
+      txHash: step.transfer.txHash,
+      timestamp: step.transfer.timestamp,
+    });
+  }
+  return nodes.length ? { nodes, edges } : null;
+}
+
+function buildGraphWithTimestamps(
+  result: FlowToExchangeSuccess | FlowToExchangeFailure
+): FlowGraphWithTimestamps | null {
+  const { graph, steps } = result;
+  const stepMap = new Map<string, string>();
+  for (const step of steps ?? []) {
+    const key = `${step.fromAddress}|${step.toAddress}|${step.transfer.txHash}`;
+    stepMap.set(key, step.transfer.timestamp);
+  }
+  if (graph?.nodes?.length) {
+    const nodes = graph.nodes.map(normalizeNode);
+    const rawEdges = graph.edges ?? [];
+    const edges = rawEdges.map((e) => {
+      const key = `${e.from}|${e.to}|${e.txHash}`;
+      return { ...e, timestamp: stepMap.get(key) };
+    });
+    return { nodes, edges };
+  }
+  return buildGraphFromSteps(steps ?? []);
+}
 
 type Step3ResultadosProps = {
   trackingPayload: TrackingPayload;
@@ -21,157 +66,46 @@ type Step3ResultadosProps = {
 };
 
 export function Step3Resultados({
-  trackingPayload,
   trackingResult,
   trackingError,
-  onNovoRastreamento,
-  onMeusCasos,
 }: Step3ResultadosProps) {
-  const success = trackingResult?.success === true;
-  const failure = trackingResult && !trackingResult.success;
+  const graphWithTimestamps = useMemo(() => {
+    if (!trackingResult) return null;
+    return buildGraphWithTimestamps(trackingResult);
+  }, [trackingResult]);
+
+  const showGraph = graphWithTimestamps != null && graphWithTimestamps.nodes.length > 0;
+
+  if (trackingError) {
+    return (
+      <main className="flex h-full w-full flex-col items-center justify-center px-4">
+        <p className="text-center text-sm text-destructive">{trackingError}</p>
+      </main>
+    );
+  }
+
+  if (!trackingResult) {
+    return null;
+  }
+
+  if (!showGraph || !graphWithTimestamps) {
+    return (
+      <main className="flex h-full w-full flex-col items-center justify-center px-4">
+        <p className="text-center text-sm text-muted-foreground">
+          Nenhum dado de fluxo disponível para exibir o grafo.
+        </p>
+      </main>
+    );
+  }
 
   return (
-    <>
-      <PageHeader
-        className="mx-auto mt-5"
-        title="Resultados do rastreio"
-        description={
-          trackingError
-            ? 'Ocorreu um erro ao rastrear. Você pode tentar novamente.'
-            : success
-              ? 'Caminho até uma exchange (hot wallet) encontrado.'
-              : failure
-                ? 'Nenhum caminho até exchange encontrado. Veja o que foi explorado abaixo.'
-                : 'Resumo do rastreamento.'
-        }
+    <main className="h-full w-full">
+      <FlowGraphView
+        key={`auto-${graphWithTimestamps.nodes.length}-${graphWithTimestamps.edges.length}-${(graphWithTimestamps.nodes[0]?.id ?? '').slice(0, 18)}`}
+        graph={graphWithTimestamps}
+        className="h-full w-full"
+        readOnly
       />
-
-      <div className="mt-6 space-y-6">
-        <div className="rounded-lg border border-border bg-muted/20 p-4">
-          <h2 className="mb-3 text-sm font-semibold text-foreground">Resumo do caso</h2>
-          <dl className="space-y-2 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Nome do caso</dt>
-              <dd className="font-medium text-foreground">{trackingPayload.caseName}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Transações informadas</dt>
-              <dd className="font-medium text-foreground">{trackingPayload.entries.length}</dd>
-            </div>
-            {trackingResult && (
-              <div>
-                <dt className="text-muted-foreground">Chain</dt>
-                <dd className="font-medium text-foreground">{trackingResult.chain}</dd>
-              </div>
-            )}
-          </dl>
-        </div>
-
-        {trackingError && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
-            <p className="text-sm font-medium text-destructive">{trackingError}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Verifique se a API está rodando e se a hash e o valor estão corretos. O rastreio pode demorar vários minutos.
-            </p>
-          </div>
-        )}
-
-        {failure && (
-          <div className="rounded-lg border border-amber-500/50 bg-amber-500/5 p-4">
-            <p className="text-sm font-medium text-foreground">
-              {REASON_LABELS[(failure as FlowToExchangeFailure).reason] ?? (failure as FlowToExchangeFailure).reason}
-            </p>
-            <p className="mt-1 font-mono text-xs text-muted-foreground break-all">
-              Última carteira: {(failure as FlowToExchangeFailure).lastWallet}
-            </p>
-          </div>
-        )}
-
-        {trackingResult && (success || failure) && (
-          <>
-            {success && (
-              <div className="rounded-lg border border-border bg-green-500/5 p-4">
-                <h3 className="text-sm font-semibold text-foreground">Hot wallet de destino</h3>
-                <p className="mt-1 font-mono text-xs text-foreground break-all">
-                  {(trackingResult as FlowToExchangeSuccess).endpointAddress}
-                </p>
-              </div>
-            )}
-
-            {(trackingResult.steps?.length ?? 0) > 0 && (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <div className="bg-muted/40 px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Passos do fluxo ({trackingResult.steps.length})
-                </div>
-                <div className="divide-y divide-border">
-                  {trackingResult.steps.map((step, i) => (
-                    <div key={i} className="px-3 py-3 text-sm">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="font-mono text-xs text-muted-foreground">
-                          {truncateHash(step.fromAddress)}
-                        </span>
-                        <span className="text-muted-foreground">→</span>
-                        <span className="font-mono text-xs text-foreground">
-                          {truncateHash(step.toAddress)}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {step.transfer.amount} {step.transfer.symbol} · tx: {truncateHash(step.transfer.txHash, 28)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {trackingResult.graph?.edges?.length > 0 && (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <div className="bg-muted/40 px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Grafo do fluxo ({trackingResult.graph.nodes.length} nós, {trackingResult.graph.edges.length} arestas)
-                </div>
-                <div className="divide-y divide-border max-h-64 overflow-y-auto">
-                  {trackingResult.graph.edges.map((edge, i) => (
-                    <div key={i} className="px-3 py-2 text-xs flex flex-wrap items-center gap-x-2">
-                      <span className="text-muted-foreground">{edge.from.slice(0, 10)}…{edge.from.slice(-8)}</span>
-                      <span>→</span>
-                      <span className="text-foreground">{edge.to.slice(0, 10)}…{edge.to.slice(-8)}</span>
-                      <span className="text-muted-foreground">
-                        {edge.amount} {edge.symbol}
-                      </span>
-                      {edge.outcome && (
-                        <span
-                          className={
-                            edge.outcome === 'SUCCESS'
-                              ? 'text-green-600'
-                              : edge.outcome === 'NO_OUTBOUND'
-                                ? 'text-destructive'
-                                : 'text-muted-foreground'
-                          }
-                        >
-                          {edge.outcome}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      <div className="mt-8 flex flex-wrap gap-2">
-        <Button
-          type="button"
-          onClick={onNovoRastreamento}
-          className="rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          Novo rastreamento
-        </Button>
-        <Button type="button" onClick={onMeusCasos} variant="outline" className="rounded-[6px]">
-          Meus casos
-        </Button>
-      </div>
-    </>
+    </main>
   );
 }

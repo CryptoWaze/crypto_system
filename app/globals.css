@@ -152,13 +152,29 @@
     opacity: 0.6;
 }
 
-@keyframes galaxy-drift {
+@keyframes galaxy-wander-1 {
     0%, 100% { transform: translate(0, 0); opacity: 0.4; }
-    33% { transform: translate(3px, -2px); opacity: 0.55; }
-    66% { transform: translate(-2px, 3px); opacity: 0.45; }
+    20% { transform: translate(25vw, -15vh); opacity: 0.55; }
+    40% { transform: translate(-20vw, 20vh); opacity: 0.45; }
+    60% { transform: translate(15vw, 25vh); opacity: 0.5; }
+    80% { transform: translate(-25vw, -10vh); opacity: 0.45; }
 }
+@keyframes galaxy-wander-2 {
+    0%, 100% { transform: translate(0, 0); opacity: 0.45; }
+    25% { transform: translate(-30vw, 10vh); opacity: 0.5; }
+    50% { transform: translate(20vw, -25vh); opacity: 0.4; }
+    75% { transform: translate(-15vw, -20vh); opacity: 0.55; }
+}
+@keyframes galaxy-wander-3 {
+    0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+    33% { transform: translate(18vw, 22vh); opacity: 0.4; }
+    66% { transform: translate(-22vw, -18vh); opacity: 0.55; }
+}
+.galaxy-dot.galaxy-dot-1 { animation: galaxy-wander-1 50s ease-in-out infinite; }
+.galaxy-dot.galaxy-dot-2 { animation: galaxy-wander-2 55s ease-in-out infinite; }
+.galaxy-dot.galaxy-dot-3 { animation: galaxy-wander-3 48s ease-in-out infinite; }
 .galaxy-dot {
-    animation: galaxy-drift 40s ease-in-out infinite;
+    animation: galaxy-wander-1 50s ease-in-out infinite;
 }
 
 .scrollbar-thin {

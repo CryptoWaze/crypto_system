@@ -11,6 +11,7 @@ import { AppHeader } from '@/components/common/appHeader';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/lib/toast-context';
+import { Loader2 } from 'lucide-react';
 import type { HashValueRow, TrackingPayload } from './types';
 import { initialRow, nextId } from './utils';
 import { Stepper } from './Stepper';
@@ -134,8 +135,9 @@ export function NewTrackingTemplate() {
                     const socket = connectSocket();
                     socket.emit('subscribe-flow-trace', { traceId });
                     socket.on('flow-trace-progress', (payload: { message?: string }) => {
-                        if (payload?.message) {
-                            setTrackingLogs((prev) => [...prev, payload.message]);
+                        const msg = payload?.message;
+                        if (msg) {
+                            setTrackingLogs((prev) => [...prev, msg]);
                         }
                     });
                 } catch {
@@ -145,8 +147,6 @@ export function NewTrackingTemplate() {
             const result = await getFlowToExchangeByTransaction(first.hash, reportedLossAmount, traceId ?? undefined);
 
             setIsTracking(false);
-            setShowResults(true);
-
             if (result.ok) {
                 setTrackingResult(result.data);
                 setTrackingError(null);
@@ -160,6 +160,7 @@ export function NewTrackingTemplate() {
                 setTrackingError(result.message);
                 toast.error(result.message);
             }
+            setShowResults(true);
         })();
     }, [caseName, rows, toast]);
 
@@ -177,10 +178,40 @@ export function NewTrackingTemplate() {
         <div className="min-h-screen w-full overflow-auto bg-background">
             <AppHeader user={user} meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
             <div className="h-14 shrink-0" aria-hidden />
-            <main className="mx-auto min-h-[calc(100vh-7rem)] max-w-4xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10 sm:pb-20">
-                <div className="mx-auto w-full py-4">
-                    <Stepper currentStep={currentStep} />
-                </div>
+            <main
+              className={`mx-auto min-h-[calc(100vh-7rem)] ${
+                currentStep === 3 ? 'flex max-w-none flex-col px-0' : 'max-w-4xl px-4 sm:px-6 pt-8 pb-20 sm:pt-10 sm:pb-20'
+              }`}
+            >
+                {currentStep !== 3 && (
+                    <div className="w-full py-4 mx-auto">
+                        <Stepper currentStep={currentStep} />
+                    </div>
+                )}
+
+                {currentStep === 3 && trackingPayload && (
+                    <div className="h-[calc(100vh-3.5rem)] w-full flex-1 shrink-0">
+                        {trackingResult !== null || trackingError !== null ? (
+                            <Step3Resultados
+                                trackingPayload={trackingPayload}
+                                trackingResult={trackingResult}
+                                trackingError={trackingError}
+                                onNovoRastreamento={() => {
+                                    setShowResults(false);
+                                    setTrackingPayload(null);
+                                    setTrackingResult(null);
+                                    setTrackingError(null);
+                                }}
+                                onMeusCasos={() => setMeusCasosOpen(true)}
+                            />
+                        ) : (
+                            <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+                                <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
+                                <p className="text-sm text-muted-foreground">Preparando resultado...</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {currentStep === 1 && (
                     <Step1DadosDoCaso
@@ -199,20 +230,6 @@ export function NewTrackingTemplate() {
                 )}
                 {currentStep === 2 && (
                     <Step2Rastreamento trackingPayload={trackingPayload} trackingLogs={trackingLogs} />
-                )}
-                {currentStep === 3 && trackingPayload && (
-                    <Step3Resultados
-                        trackingPayload={trackingPayload}
-                        trackingResult={trackingResult}
-                        trackingError={trackingError}
-                        onNovoRastreamento={() => {
-                            setShowResults(false);
-                            setTrackingPayload(null);
-                            setTrackingResult(null);
-                            setTrackingError(null);
-                        }}
-                        onMeusCasos={() => setMeusCasosOpen(true)}
-                    />
                 )}
             </main>
 
