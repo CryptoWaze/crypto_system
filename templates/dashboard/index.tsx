@@ -3,32 +3,33 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getUser } from '@/lib/auth-storage';
-import type { UserResponse } from '@/lib/types/auth';
+import { useSession } from 'next-auth/react';
 import { AppHeader } from '@/components/common/appHeader';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 export function DashboardTemplate() {
     const router = useRouter();
-    const [user, setUser] = useState<UserResponse | null>(null);
+    const { status } = useSession();
     const [meusCasosOpen, setMeusCasosOpen] = useState(false);
 
     useEffect(() => {
-        const u = getUser();
-        if (!u) {
-            router.replace('/login');
-            return;
-        }
-        setUser(u);
-    }, [router]);
+        if (status === 'unauthenticated') router.replace('/login');
+    }, [status, router]);
 
-    if (!user) {
-        return null;
+    if (status === 'loading') {
+        return (
+            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
+                <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
+            </div>
+        );
     }
+    if (status === 'unauthenticated') return null;
 
     return (
         <div className="min-h-screen w-full overflow-auto bg-background">
-            <AppHeader user={user} meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
+            <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
             <div className="h-14 shrink-0" aria-hidden />
             <main className="relative flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-16">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(91,141,239,0.05),transparent_45%)]" aria-hidden />

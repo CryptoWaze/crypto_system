@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { clearUser } from '@/lib/auth-storage';
-import type { UserResponse } from '@/lib/types/auth';
+import { useSession, signOut } from 'next-auth/react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,13 +18,14 @@ import { FolderOpen, ChevronDown, LogOut } from 'lucide-react';
 import { ModalCases } from '@/components/common/modalCases';
 
 type AppHeaderProps = {
-    user: UserResponse;
     meusCasosOpen?: boolean;
     onMeusCasosOpenChange?: (open: boolean) => void;
 };
 
-export function AppHeader({ user, meusCasosOpen: meusCasosOpenProp, onMeusCasosOpenChange }: AppHeaderProps) {
+export function AppHeader({ meusCasosOpen: meusCasosOpenProp, onMeusCasosOpenChange }: AppHeaderProps) {
     const router = useRouter();
+    const { data: session } = useSession();
+    const user = session?.user;
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [meusCasosOpenInternal, setMeusCasosOpenInternal] = useState(false);
     const meusCasosOpen = onMeusCasosOpenChange ? (meusCasosOpenProp ?? false) : meusCasosOpenInternal;
@@ -33,11 +33,10 @@ export function AppHeader({ user, meusCasosOpen: meusCasosOpenProp, onMeusCasosO
 
     const handleConfirmSair = () => {
         setConfirmOpen(false);
-        clearUser();
-        router.replace('/login');
+        signOut({ redirect: false }).then(() => router.replace('/login'));
     };
 
-    const displayName = user.name ?? user.email;
+    const displayName = user?.name ?? user?.email ?? '';
 
     return (
         <>
@@ -72,7 +71,7 @@ export function AppHeader({ user, meusCasosOpen: meusCasosOpenProp, onMeusCasosO
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="min-w-[220px]">
                             <DropdownMenuLabel className="font-normal">
-                                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                                <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => setMeusCasosOpen(true)}>

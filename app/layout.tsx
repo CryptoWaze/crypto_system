@@ -3,6 +3,7 @@ import { Geist } from 'next/font/google';
 import { Source_Serif_4 } from 'next/font/google';
 
 import { ToastProvider } from '@/lib/toast-context';
+import { SessionProvider } from '@/components/providers/SessionProvider';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });
@@ -22,11 +23,13 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="pt-BR" className="dark">
-            <body className={`${geist.className} ${sourceSerif.variable} font-sans antialiased`}>
-                <ToastProvider>
-                    {children}
-                </ToastProvider>
+        <html lang="pt-BR" className="dark" suppressHydrationWarning>
+            <body className={`${geist.className} ${sourceSerif.variable} font-sans antialiased`} suppressHydrationWarning>
+                <SessionProvider>
+                    <ToastProvider>
+                        {children}
+                    </ToastProvider>
+                </SessionProvider>
             </body>
         </html>
     );

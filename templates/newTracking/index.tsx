@@ -2,10 +2,9 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUser } from '@/lib/auth-storage';
-import type { UserResponse } from '@/lib/types/auth';
+import { useSession } from 'next-auth/react';
 import type { FlowToExchangeSuccess, FlowToExchangeFailure } from '@/lib/types/tracking';
-import { getFlowToExchangeByTransaction } from '@/lib/services/tracking/flow-to-exchange.service';
+import { createCase } from '@/lib/services/cases/create-case.service';
 import { connectSocket } from '@/lib/services/socket/socket.service';
 import { AppHeader } from '@/components/common/appHeader';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,8 @@ import { Step3Resultados } from './steps/Step3Resultados';
 export function NewTrackingTemplate() {
     const router = useRouter();
     const toast = useToast();
-    const [user, setUser] = useState<UserResponse | null>(null);
+    const { status, data: session } = useSession();
+    const accessToken = session?.user?.accessToken;
     const [meusCasosOpen, setMeusCasosOpen] = useState(false);
     const [caseName, setCaseName] = useState('');
     const [rows, setRows] = useState<HashValueRow[]>(() => [initialRow()]);
@@ -35,16 +35,12 @@ export function NewTrackingTemplate() {
     const [trackingPayload, setTrackingPayload] = useState<TrackingPayload | null>(null);
     const [trackingResult, setTrackingResult] = useState<FlowToExchangeSuccess | FlowToExchangeFailure | null>(null);
     const [trackingError, setTrackingError] = useState<string | null>(null);
+    const [caseId, setCaseId] = useState<string | null>(null);
     const traceIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        const u = getUser();
-        if (!u) {
-            router.replace('/login');
-            return;
-        }
-        setUser(u);
-    }, [router]);
+        if (status === 'unauthenticated') router.replace('/login');
+    }, [status, router]);
 
     const hasData = caseName.trim() !== '' || rows.some((r) => r.hash.trim() !== '' || r.value.trim() !== '');
 
@@ -83,7 +79,7 @@ export function NewTrackingTemplate() {
     const handleSubmit = useCallback(() => {
         const name = caseName.trim();
         const entries = rows
-            .filter((r) => r.hash.trim() !== '' || r.value.trim() !== '')
+            .filter((r) => r.hash.trim() !== '' && r.value.trim() !== '')
             .map((r) => ({
                 hash: r.hash.trim(),
                 value: r.value.trim() ? parseFloat(r.value.replace(',', '.')) : undefined,
@@ -98,71 +94,79 @@ export function NewTrackingTemplate() {
             return;
         }
         if (entries.length === 0) {
-            setDadosError('Preencha pelo menos uma linha (hash e valor da transação).');
-            toast.error('Preencha pelo menos uma linha (hash e valor da transação).');
+            setDadosError('Preencha pelo menos uma linha com hash e valor da transação.');
+            toast.error('Preencha pelo menos uma linha com hash e valor da transação.');
             return;
         }
-        const first = entries[0];
-        if (!first.hash.trim()) {
-            setDadosError('Informe a hash da transação na primeira linha.');
-            toast.error('Informe a hash da transação na primeira linha.');
+        const invalidEntry = entries.find((e) => e.value == null || !Number.isFinite(e.value) || e.value <= 0);
+        if (invalidEntry) {
+            setDadosError('Cada linha deve ter valor numérico maior que zero.');
+            toast.error('Cada linha deve ter valor numérico maior que zero.');
             return;
         }
-        if (first.value == null || !Number.isFinite(first.value)) {
-            setDadosError('Informe um valor numérico válido na primeira linha.');
-            toast.error('Informe um valor numérico válido na primeira linha.');
-            return;
-        }
-        const reportedLossAmount = first.value;
-        if (reportedLossAmount <= 0) {
-            setDadosError('O valor da transação na primeira linha deve ser maior que zero.');
-            toast.error('O valor da transação na primeira linha deve ser maior que zero.');
+        if (!accessToken) {
+            toast.error('Sessão expirada. Faça login novamente.');
             return;
         }
 
-        const traceId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : undefined;
-        traceIdRef.current = traceId ?? null;
+        const seeds = entries.map((e) => ({
+            txHash: e.hash,
+            reportedLossAmount: e.value as number,
+        }));
 
         setTrackingPayload({ caseName: name, entries });
         setTrackingLogs(['Iniciando rastreamento...']);
         setTrackingResult(null);
         setTrackingError(null);
+        setCaseId(null);
         setIsTracking(true);
 
         (async () => {
-            if (traceId) {
-                try {
-                    const socket = connectSocket();
-                    socket.emit('subscribe-flow-trace', { traceId });
-                    socket.on('flow-trace-progress', (payload: { message?: string }) => {
-                        const msg = payload?.message;
-                        if (msg) {
-                            setTrackingLogs((prev) => [...prev, msg]);
-                        }
-                    });
-                } catch {
-                }
-            }
+            const result = await createCase({ name, seeds }, accessToken);
 
-            const result = await getFlowToExchangeByTransaction(first.hash, reportedLossAmount, traceId ?? undefined);
-
-            setIsTracking(false);
-            if (result.ok) {
-                setTrackingResult(result.data);
-                setTrackingError(null);
-                setTrackingLogs((prev) => [...prev, 'Rastreamento concluído com sucesso.']);
-            } else if (result.status === 404 && result.data) {
-                setTrackingResult(result.data);
-                setTrackingError(null);
-                setTrackingLogs((prev) => [...prev, `Concluído: ${result.message}`]);
-            } else {
-                setTrackingResult(null);
+            if (!result.ok) {
+                setIsTracking(false);
                 setTrackingError(result.message);
                 toast.error(result.message);
+                setShowResults(true);
+                return;
             }
-            setShowResults(true);
+
+            const { traceId, caseId: responseCaseId, seedsCount } = result.data;
+            setCaseId(responseCaseId);
+            traceIdRef.current = traceId;
+
+            try {
+                const socket = connectSocket();
+                socket.emit('subscribe-flow-trace', { traceId });
+                for (let i = 0; i < seedsCount; i++) {
+                    socket.emit('subscribe-flow-trace', { traceId: `${traceId}-${i}` });
+                }
+                const currentTraceId = traceId;
+                socket.off('flow-trace-progress');
+                socket.off('case-created');
+                socket.on('flow-trace-progress', (payload: { message?: string }) => {
+                    const msg = payload?.message;
+                    if (msg) setTrackingLogs((prev) => [...prev, msg]);
+                });
+                socket.on('case-created', (payload: FlowToExchangeSuccess | FlowToExchangeFailure | { graph?: unknown }) => {
+                    if (traceIdRef.current !== currentTraceId) return;
+                    const hasGraph = payload && typeof payload === 'object' && 'graph' in payload;
+                    if (hasGraph && payload.graph) {
+                        setTrackingResult(payload as FlowToExchangeSuccess | FlowToExchangeFailure);
+                        setTrackingError(null);
+                        setTrackingLogs((prev) => [...prev, 'Rastreamento concluído.']);
+                    } else {
+                        setTrackingLogs((prev) => [...prev, 'Caso criado.']);
+                    }
+                    setIsTracking(false);
+                    setShowResults(true);
+                });
+            } catch {
+                setTrackingLogs((prev) => [...prev, 'Caso enviado. Aguardando conclusão...']);
+            }
         })();
-    }, [caseName, rows, toast]);
+    }, [caseName, rows, toast, accessToken]);
 
     useEffect(() => {
         if (showResults && trackingResult?.success === true) {
@@ -172,46 +176,24 @@ export function NewTrackingTemplate() {
 
     const currentStep = showResults ? 3 : isTracking ? 2 : 1;
 
-    if (!user) return null;
+    if (status === 'loading') {
+        return (
+            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
+                <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
+            </div>
+        );
+    }
+    if (status === 'unauthenticated') return null;
 
     return (
         <div className="min-h-screen w-full overflow-auto bg-background">
-            <AppHeader user={user} meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
+            <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
             <div className="h-14 shrink-0" aria-hidden />
-            <main
-              className={`mx-auto min-h-[calc(100vh-7rem)] ${
-                currentStep === 3 ? 'flex max-w-none flex-col px-0' : 'max-w-4xl px-4 sm:px-6 pt-8 pb-20 sm:pt-10 sm:pb-20'
-              }`}
-            >
-                {currentStep !== 3 && (
-                    <div className="w-full py-4 mx-auto">
-                        <Stepper currentStep={currentStep} />
-                    </div>
-                )}
-
-                {currentStep === 3 && trackingPayload && (
-                    <div className="h-[calc(100vh-3.5rem)] w-full flex-1 shrink-0">
-                        {trackingResult !== null || trackingError !== null ? (
-                            <Step3Resultados
-                                trackingPayload={trackingPayload}
-                                trackingResult={trackingResult}
-                                trackingError={trackingError}
-                                onNovoRastreamento={() => {
-                                    setShowResults(false);
-                                    setTrackingPayload(null);
-                                    setTrackingResult(null);
-                                    setTrackingError(null);
-                                }}
-                                onMeusCasos={() => setMeusCasosOpen(true)}
-                            />
-                        ) : (
-                            <div className="flex h-full w-full flex-col items-center justify-center gap-4">
-                                <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
-                                <p className="text-sm text-muted-foreground">Preparando resultado...</p>
-                            </div>
-                        )}
-                    </div>
-                )}
+            <main className="mx-auto min-h-[calc(100vh-7rem)] max-w-4xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10 sm:pb-20">
+                <div className="w-full py-4 mx-auto">
+                    <Stepper currentStep={currentStep} />
+                </div>
 
                 {currentStep === 1 && (
                     <Step1DadosDoCaso
@@ -228,8 +210,24 @@ export function NewTrackingTemplate() {
                         onSubmit={handleSubmit}
                     />
                 )}
-                {currentStep === 2 && (
-                    <Step2Rastreamento trackingPayload={trackingPayload} trackingLogs={trackingLogs} />
+                {currentStep === 2 && <Step2Rastreamento trackingPayload={trackingPayload} trackingLogs={trackingLogs} />}
+
+                {currentStep === 3 && trackingPayload && (
+                    <Step3Resultados
+                        trackingPayload={trackingPayload}
+                        trackingLogs={trackingLogs}
+                        trackingResult={trackingResult}
+                        trackingError={trackingError}
+                        caseId={caseId}
+                        onNovoRastreamento={() => {
+                            setShowResults(false);
+                            setTrackingPayload(null);
+                            setTrackingResult(null);
+                            setTrackingError(null);
+                            setCaseId(null);
+                        }}
+                        onMeusCasos={() => setMeusCasosOpen(true)}
+                    />
                 )}
             </main>
 
