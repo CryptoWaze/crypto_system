@@ -24,7 +24,7 @@ import type { FlowGraph, FlowGraphEdge } from '@/lib/types/tracking';
 import { FlowNodeDetailModal } from './FlowNodeDetailModal';
 import { FlowEdgeDetailModal } from './FlowEdgeDetailModal';
 
-const LABEL_WIDTH = 200;
+const LABEL_WIDTH = 300;
 const LABEL_HEIGHT = 52;
 
 const FLOW_COLORS = [
@@ -403,16 +403,7 @@ function flowGraphToReactFlow(
     const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
     const positionMap = getTreeLayoutPositions(graph);
     const outEdgesBySource = getOutEdges(graph);
-    const exchangeTitleBase = endpointExchangeName ? `${endpointExchangeName}: ` : 'Binance: ';
-    const endpointIds = new Set(graph.nodes.filter((node) => (outEdgesBySource[node.id]?.length ?? 0) === 0).map((node) => node.id));
     const returnSourceIds = new Set((graph as FlowGraphWithTimestamps).returnSourceNodeIds ?? []);
-    const trueEndpointIds = new Set([...endpointIds].filter((id) => !returnSourceIds.has(id)));
-    const penultimateIds = new Set<string>();
-    for (const e of graph.edges) {
-        if (trueEndpointIds.has(e.to)) {
-            penultimateIds.add(e.from);
-        }
-    }
     const nodes: Node[] = order.map((id, i) => {
         const n = nodeMap.get(id);
         const label = n?.label ?? id;
@@ -421,10 +412,6 @@ function flowGraphToReactFlow(
             title = n.title;
         } else if (i === 0 && caseName) {
             title = `${capitalizeFirst(caseName)} Address`;
-        } else if (endpointIds.has(id) && !returnSourceIds.has(id) && endpointHotWalletLabel) {
-            title = `${exchangeTitleBase}${endpointHotWalletLabel}`;
-        } else if (penultimateIds.has(id)) {
-            title = `${exchangeTitleBase}Deposit Address`;
         }
         const pos = positionMap.get(id) ?? { x: i * (NODE_WIDTH + HORIZONTAL_GAP), y: 0 };
         const connectedIds = outEdgesBySource[id] ?? [];
