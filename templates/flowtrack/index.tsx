@@ -2,67 +2,30 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUser } from '@/lib/auth-storage';
-import type { UserResponse } from '@/lib/types/auth';
-import type { TransactionsResolveResponse, FlowGraph, FlowGraphNode } from '@/lib/types/tracking';
-import type { FlowGraphEdgeWithTimestamp } from '@/components/flow/FlowGraphView';
+import { useSession } from 'next-auth/react';
 import { postTransactionsResolve } from '@/lib/services/transactions/resolve.service';
-import { FlowGraphView } from '@/components/flow/FlowGraphView';
+import { saveFlowTrackToHistory } from '@/lib/utils/flow-track-history';
 import { AppHeader } from '@/components/common/appHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/lib/toast-context';
-import { Search, Loader2, ArrowLeft } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 
-type ViewState = 'input' | 'loading' | 'result';
-
-function buildGraphFromResolve(
-  resolveData: TransactionsResolveResponse,
-  txHash: string,
-): FlowGraph & { edges: FlowGraphEdgeWithTimestamp[] } {
-  const transfer =
-    resolveData.seedTransfer ??
-    (resolveData.transfers?.length
-      ? resolveData.transfers.reduce((best, t) => (t.amount > best.amount ? t : best))
-      : null);
-  if (!transfer) {
-    return { nodes: [], edges: [] };
-  }
-  const nodes: FlowGraphNode[] = [
-    { id: transfer.from, label: transfer.from },
-    { id: transfer.to, label: transfer.to },
-  ];
-  const edge: FlowGraphEdgeWithTimestamp = {
-    from: transfer.from,
-    to: transfer.to,
-    symbol: transfer.symbol,
-    amount: transfer.amount,
-    amountRaw: transfer.rawAmount,
-    txHash,
-    timestamp: transfer.timestamp,
-  };
-  return { nodes, edges: [edge] };
-}
+type ViewState = 'input' | 'loading';
 
 export function FlowTrackTemplate() {
   const router = useRouter();
   const toast = useToast();
-  const [user, setUser] = useState<UserResponse | null>(null);
+  const { status } = useSession();
   const [meusCasosOpen, setMeusCasosOpen] = useState(false);
   const [view, setView] = useState<ViewState>('input');
   const [hash, setHash] = useState('');
   const [value, setValue] = useState('');
-  const [resolveData, setResolveData] = useState<TransactionsResolveResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const u = getUser();
-    if (!u) {
-      router.replace('/login');
-      return;
-    }
-    setUser(u);
-  }, [router]);
+    if (status === 'unauthenticated') router.replace('/login');
+  }, [status, router]);
 
   const handleSearch = useCallback(async () => {
     const txHash = hash.trim();
@@ -82,27 +45,32 @@ export function FlowTrackTemplate() {
     const result = await postTransactionsResolve(txHash, reportedLossAmount);
 
     if (result.ok) {
-      setResolveData(result.data);
-      setView('result');
+      const historyId = saveFlowTrackToHistory({
+        resolveData: result.data,
+        txHash: txHash,
+      });
+      setView('input');
+      router.push(`/dashboard/case/history/${historyId}`);
     } else {
-      setResolveData(null);
       setView('input');
       setError(result.message);
       toast.error(result.message);
     }
   }, [hash, value, toast]);
 
-  const handleNewSearch = useCallback(() => {
-    setView('input');
-    setResolveData(null);
-    setError(null);
-  }, []);
-
-  if (!user) return null;
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
+        <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
+  if (status === 'unauthenticated') return null;
 
   return (
     <div className="min-h-screen w-full overflow-auto bg-background">
-      <AppHeader user={user} meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
+      <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
       <div className="h-14 shrink-0" aria-hidden />
 
       {view === 'input' && (
@@ -169,16 +137,6 @@ export function FlowTrackTemplate() {
           <p className="mt-4 text-sm text-muted-foreground">Buscando transação nas chains...</p>
         </main>
       )}
-
-      {view === 'result' && resolveData && (() => {
-        const graph = buildGraphFromResolve(resolveData, hash.trim());
-        if (graph.nodes.length === 0) return null;
-        return (
-          <main className="h-[calc(100vh-3.5rem)] w-full">
-            <FlowGraphView graph={graph} className="h-full w-full" />
-          </main>
-        );
-      })()}
     </div>
   );
 }

@@ -8,6 +8,7 @@ export interface UserResponse {
   email: string
   name: string | null
   createdAt: string
+  accessToken: string
 }
 
 export type LoginSuccess = {

@@ -1,6 +1,9 @@
 export interface FlowGraphNode {
   id: string;
   label: string;
+  title?: string;
+  chainIconUrl?: string;
+  endpointExchangeIconUrl?: string;
 }
 
 export interface FlowGraphEdge {

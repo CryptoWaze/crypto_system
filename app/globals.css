@@ -145,7 +145,9 @@
     box-shadow: 0 0 24px -4px var(--glow-blue);
 }
 .ring-futuristic:focus-visible {
-    box-shadow: 0 0 0 2px var(--background), 0 0 16px 0 var(--glow-blue);
+    box-shadow:
+        0 0 0 2px var(--background),
+        0 0 16px 0 var(--glow-blue);
 }
 .divider-futuristic {
     background: linear-gradient(90deg, transparent, var(--edge-blue), transparent);
@@ -153,26 +155,71 @@
 }
 
 @keyframes galaxy-wander-1 {
-    0%, 100% { transform: translate(0, 0); opacity: 0.4; }
-    20% { transform: translate(25vw, -15vh); opacity: 0.55; }
-    40% { transform: translate(-20vw, 20vh); opacity: 0.45; }
-    60% { transform: translate(15vw, 25vh); opacity: 0.5; }
-    80% { transform: translate(-25vw, -10vh); opacity: 0.45; }
+    0%,
+    100% {
+        transform: translate(0, 0);
+        opacity: 0.4;
+    }
+    20% {
+        transform: translate(25vw, -15vh);
+        opacity: 0.55;
+    }
+    40% {
+        transform: translate(-20vw, 20vh);
+        opacity: 0.45;
+    }
+    60% {
+        transform: translate(15vw, 25vh);
+        opacity: 0.5;
+    }
+    80% {
+        transform: translate(-25vw, -10vh);
+        opacity: 0.45;
+    }
 }
 @keyframes galaxy-wander-2 {
-    0%, 100% { transform: translate(0, 0); opacity: 0.45; }
-    25% { transform: translate(-30vw, 10vh); opacity: 0.5; }
-    50% { transform: translate(20vw, -25vh); opacity: 0.4; }
-    75% { transform: translate(-15vw, -20vh); opacity: 0.55; }
+    0%,
+    100% {
+        transform: translate(0, 0);
+        opacity: 0.45;
+    }
+    25% {
+        transform: translate(-30vw, 10vh);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translate(20vw, -25vh);
+        opacity: 0.4;
+    }
+    75% {
+        transform: translate(-15vw, -20vh);
+        opacity: 0.55;
+    }
 }
 @keyframes galaxy-wander-3 {
-    0%, 100% { transform: translate(0, 0); opacity: 0.5; }
-    33% { transform: translate(18vw, 22vh); opacity: 0.4; }
-    66% { transform: translate(-22vw, -18vh); opacity: 0.55; }
+    0%,
+    100% {
+        transform: translate(0, 0);
+        opacity: 0.5;
+    }
+    33% {
+        transform: translate(18vw, 22vh);
+        opacity: 0.4;
+    }
+    66% {
+        transform: translate(-22vw, -18vh);
+        opacity: 0.55;
+    }
 }
-.galaxy-dot.galaxy-dot-1 { animation: galaxy-wander-1 50s ease-in-out infinite; }
-.galaxy-dot.galaxy-dot-2 { animation: galaxy-wander-2 55s ease-in-out infinite; }
-.galaxy-dot.galaxy-dot-3 { animation: galaxy-wander-3 48s ease-in-out infinite; }
+.galaxy-dot.galaxy-dot-1 {
+    animation: galaxy-wander-1 50s ease-in-out infinite;
+}
+.galaxy-dot.galaxy-dot-2 {
+    animation: galaxy-wander-2 55s ease-in-out infinite;
+}
+.galaxy-dot.galaxy-dot-3 {
+    animation: galaxy-wander-3 48s ease-in-out infinite;
+}
 .galaxy-dot {
     animation: galaxy-wander-1 50s ease-in-out infinite;
 }
@@ -195,26 +242,58 @@
     background: rgba(91, 141, 239, 0.4);
 }
 
+.modal-cases-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+.modal-cases-list::-webkit-scrollbar {
+    width: 5px;
+}
+.modal-cases-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modal-cases-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+}
+.modal-cases-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
 .flow-track-graph .react-flow__node {
-    background: #25262a !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0;
+    padding: 0 !important;
+    box-shadow: none;
+}
+
+.flow-track-graph .flow-track-node {
+    background: #25262a;
     border: 3px solid transparent;
     border-radius: 0.75rem;
     color: #cccccc;
     padding: 12px 16px;
-    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     word-break: break-all;
     line-height: 1.35;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
 }
-.flow-track-graph .react-flow__node.selected {
+
+.flow-track-graph .flow-track-node--highlight {
     border-color: #5b8def !important;
-    box-shadow: 0 0 0 2px #303135, 0 0 20px rgba(91, 141, 239, 0.5);
+    box-shadow:
+        0 0 0 2px #303135,
+        0 0 20px rgba(91, 141, 239, 0.5);
 }
 .flow-track-graph .react-flow__node .react-flow__handle {
     background: #5b8def;
+    z-index: 10;
 }
 .flow-track-graph .react-flow__edge-path {
     stroke: rgba(91, 141, 239, 0.7);
@@ -224,7 +303,7 @@
 }
 .flow-track-graph .react-flow__edge-textbg {
     fill: #1a1a1a !important;
-    stroke: rgba(255,255,255,0.1);
+    stroke: rgba(255, 255, 255, 0.1);
 }
 
 .flow-track-graph .flow-edge-label-two-lines {
@@ -246,4 +325,23 @@
 .flow-track-graph .flow-edge-label-value {
     font-weight: 500;
     color: #e5e5e5;
+}
+
+.flow-track-graph .react-flow__controls {
+    background: #25262a !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.flow-track-graph .react-flow__controls button {
+    background: #25262a !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+.flow-track-graph .react-flow__controls button:hover {
+    background: #303135 !important;
+    color: #fff !important;
+}
+.flow-track-graph .react-flow__controls button svg {
+    fill: currentColor;
 }

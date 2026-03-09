@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { useToast } from '@/lib/toast-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,9 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { loginFormSchema, type LoginFormData } from '@/lib/schemas/login.schema';
-import { login } from '@/lib/services/auth/auth.service';
-import { setUser } from '@/lib/auth-storage';
-import { connectSocket } from '@/lib/services/socket/socket.service';
 
 const REDIRECT_DELAY_MS = 500;
 
@@ -43,19 +41,21 @@ export function LoginTemplate() {
         }
         setIsLoading(true);
         try {
-            const result = await login(parsed.data);
-            if (result.success) {
-                const name = result.user.name ?? result.user.email ?? 'usuário';
-                setUser(result.user);
-                toast.success(`Login realizado com sucesso. Bem-vindo(a), ${name}!`);
+            const result = await signIn('credentials', {
+                email: parsed.data.email,
+                password: parsed.data.password,
+                redirect: false,
+            });
+            if (result?.ok) {
+                toast.success('Login realizado com sucesso. Bem-vindo(a)!');
                 setTimeout(() => router.push('/dashboard'), REDIRECT_DELAY_MS);
             } else {
-                toast.error(result.message);
+                setIsLoading(false);
+                toast.error('Email ou senha inválidos. Tente novamente.');
             }
         } catch {
-            toast.error('Erro inesperado. Tente novamente.');
-        } finally {
             setIsLoading(false);
+            toast.error('Erro inesperado. Tente novamente.');
         }
     };
 
