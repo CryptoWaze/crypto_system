@@ -2,6 +2,10 @@ import type { FlowGraphNode } from '@/lib/types/tracking';
 import type { CaseByIdApiResponse } from '@/lib/types/case-api';
 import type { FlowGraphEdgeWithTimestamp, FlowGraphWithTimestamps } from './flow-track-graph';
 
+function trimSymbol(s: string | undefined | null): string {
+    return (s ?? '').trim() || '—';
+}
+
 export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGraphWithTimestamps {
     const seeds = data.seeds ?? [];
     const flows = data.flows ?? [];
@@ -81,8 +85,13 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
         if (flow.endpointAddress) {
             labelByNodeId.set(flow.endpointAddress, flow.endpointAddress);
             const exchangeName = flow.endpointExchangeName ?? 'Binance';
-            const hotLabel = flow.endpointHotWalletLabel ?? 'Deposit Address';
+            const hotLabel = flow.endpointHotWalletLabel ?? 'Hot Wallet';
             titleByNodeId.set(flow.endpointAddress, `${exchangeName}: ${hotLabel}`);
+            for (const edge of flow.edges ?? []) {
+                if (edge.toAddress === flow.endpointAddress && edge.fromAddress) {
+                    titleByNodeId.set(edge.fromAddress, `${exchangeName}: Deposit Address`);
+                }
+            }
         }
     }
 
@@ -112,7 +121,7 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
         const amount = parseFloat(seed.amountDecimal ?? '0');
         const amountNum = Number.isFinite(amount) ? amount : 0;
         const basePayload = {
-            symbol: seed.tokenSymbol ?? '—',
+            symbol: trimSymbol(seed.tokenSymbol),
             amount: amountNum,
             amountRaw: seed.amountRaw ?? '0',
             txHash: seed.txHash,
@@ -150,7 +159,7 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
             edges.push({
                 from: e.fromAddress,
                 to: e.toAddress,
-                symbol: e.transferSymbol ?? flow.tokenSymbol ?? '—',
+                symbol: trimSymbol(e.transferSymbol) || trimSymbol(flow.tokenSymbol),
                 amount: Number.isFinite(amount) ? amount : 0,
                 amountRaw: e.transferAmountRaw ?? '0',
                 txHash: e.txHash ?? '',
