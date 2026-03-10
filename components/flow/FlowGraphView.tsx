@@ -529,6 +529,7 @@ function flowGraphToReactFlow(
         const flowColor = FLOW_COLORS[flowIdx % FLOW_COLORS.length];
         const sourceHandle = sourceHandleByEdgeIndex.get(i);
         const edgeChainIcon = (withTs as { chainIconUrl?: string }).chainIconUrl;
+        const edgeTransactions = withTs.transactions;
         return {
             id: `e-${e.from}-${e.to}-${i}`,
             source: e.from,
@@ -550,6 +551,7 @@ function flowGraphToReactFlow(
                 stepInFlow,
                 flowColor,
                 ...(edgeChainIcon ? { chainIconUrl: edgeChainIcon } : {}),
+                ...(edgeTransactions?.length ? { transactions: edgeTransactions } : {}),
             },
         };
     });

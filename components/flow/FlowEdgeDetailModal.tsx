@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
-import { X, Copy, Download, ChevronRight } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+import { X, Copy, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/lib/toast-context';
@@ -20,13 +20,44 @@ function formatAmount(value: number): string {
     return value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
 }
 
+function formatTimestamp(iso: string): string {
+    if (!iso) return '—';
+    try {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return iso;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        const s = String(d.getSeconds()).padStart(2, '0');
+        return `${day}/${month}/${year} ${h}:${min}:${s}`;
+    } catch {
+        return iso;
+    }
+}
+
 type FlowEdgeDetailModalProps = {
     edge: Edge;
     onClose: () => void;
     className?: string;
 };
 
-const MOCK_TX_COUNT = 4;
+export type EdgeTransactionItem = { amount: number; amountRaw: string; txHash: string; timestamp?: string };
+
+function groupIdenticalTransactions(transactions: EdgeTransactionItem[]): { amount: number; timestamp?: string }[] {
+    const byKey = new Map<string, { amount: number; timestamp?: string }>();
+    for (const tx of transactions) {
+        const key = `${tx.amount}|${tx.timestamp ?? ''}`;
+        const existing = byKey.get(key);
+        if (existing) {
+            existing.amount += tx.amount;
+        } else {
+            byKey.set(key, { amount: tx.amount, timestamp: tx.timestamp });
+        }
+    }
+    return Array.from(byKey.values());
+}
 
 export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetailModalProps) {
     const toast = useToast();
@@ -42,6 +73,7 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
               dateStr?: string;
               valueStr?: string;
               txHash?: string;
+              transactions?: EdgeTransactionItem[];
           }
         | undefined;
     const fromLabel = data?.fromLabel ?? source;
@@ -50,6 +82,12 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
     const amount = typeof data?.amount === 'number' ? data.amount : 0;
     const amountStr = formatAmount(amount);
     const valueStr = data?.valueStr ?? `${amountStr} ${symbol}`;
+
+    const displayTransactions = useMemo(() => {
+        const list = data?.transactions;
+        if (!list?.length) return [];
+        return groupIdenticalTransactions(list);
+    }, [data?.transactions]);
 
     const copyText = useCallback(
         (text: string, label: string) => {
@@ -102,68 +140,116 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                 <th className="px-3 py-2 text-left font-medium text-muted-foreground">Total Amount</th>
                                 <th className="px-3 py-2 text-left font-medium text-muted-foreground">Selected Amount</th>
                                 <th className="px-3 py-2 text-left font-medium text-muted-foreground">Token</th>
-                                {/* <th className="px-3 py-2 text-left font-medium text-muted-foreground">Transaction List</th> */}
+                                {displayTransactions.length > 0 && (
+                                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Data</th>
+                                )}
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                                <td className="px-3 py-2">
-                                    <div className="flex items-center gap-2">
-                                        <BinanceLogoIcon size={14} />
-                                        <div className="min-w-0">
-                                            <div className="font-medium truncate">{fromLabel}</div>
+                            {displayTransactions.length > 0 ? (
+                                displayTransactions.map((tx, idx) => (
+                                    <tr key={idx} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
+                                        <td className="px-3 py-2">
+                                            <div className="flex items-center gap-2">
+                                                <BinanceLogoIcon size={14} />
+                                                <div className="min-w-0">
+                                                    <div className="font-medium truncate">{fromLabel}</div>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{source}</span>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-5 w-5 cursor-pointer rounded shrink-0"
+                                                            onClick={copyText(source, 'From')}
+                                                            aria-label="Copiar From"
+                                                        >
+                                                            <Copy className="h-2.5 w-2.5" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <div className="flex items-center gap-2">
+                                                <BinanceLogoIcon size={14} />
+                                                <div className="min-w-0">
+                                                    <div className="font-medium truncate">{toLabel}</div>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{target}</span>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-5 w-5 cursor-pointer rounded shrink-0"
+                                                            onClick={copyText(target, 'To')}
+                                                            aria-label="Copiar To"
+                                                        >
+                                                            <Copy className="h-2.5 w-2.5" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 font-mono">{formatAmount(tx.amount)}</td>
+                                        <td className="px-3 py-2 font-mono">{formatAmount(tx.amount)}</td>
+                                        <td className="px-3 py-2">
                                             <div className="flex items-center gap-1">
-                                                <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{source}</span>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-5 w-5 cursor-pointer rounded shrink-0"
-                                                    onClick={copyText(source, 'From')}
-                                                    aria-label="Copiar From"
-                                                >
-                                                    <Copy className="h-2.5 w-2.5" />
-                                                </Button>
+                                                <span>{symbol}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 font-mono text-muted-foreground">{tx.timestamp ? formatTimestamp(tx.timestamp) : '—'}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr className="border-b border-border/50 last:border-0 hover:bg-muted/20">
+                                    <td className="px-3 py-2">
+                                        <div className="flex items-center gap-2">
+                                            <BinanceLogoIcon size={14} />
+                                            <div className="min-w-0">
+                                                <div className="font-medium truncate">{fromLabel}</div>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{source}</span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-5 w-5 cursor-pointer rounded shrink-0"
+                                                        onClick={copyText(source, 'From')}
+                                                        aria-label="Copiar From"
+                                                    >
+                                                        <Copy className="h-2.5 w-2.5" />
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td className="px-3 py-2">
-                                    <div className="flex items-center gap-2">
-                                        <BinanceLogoIcon size={14} />
-                                        <div className="min-w-0">
-                                            <div className="font-medium truncate">{toLabel}</div>
-                                            <div className="flex items-center gap-1">
-                                                <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{target}</span>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-5 w-5 cursor-pointer rounded shrink-0"
-                                                    onClick={copyText(target, 'To')}
-                                                    aria-label="Copiar To"
-                                                >
-                                                    <Copy className="h-2.5 w-2.5" />
-                                                </Button>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                        <div className="flex items-center gap-2">
+                                            <BinanceLogoIcon size={14} />
+                                            <div className="min-w-0">
+                                                <div className="font-medium truncate">{toLabel}</div>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{target}</span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-5 w-5 cursor-pointer rounded shrink-0"
+                                                        onClick={copyText(target, 'To')}
+                                                        aria-label="Copiar To"
+                                                    >
+                                                        <Copy className="h-2.5 w-2.5" />
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td className="px-3 py-2 font-mono">{amountStr}</td>
-                                <td className="px-3 py-2 font-mono">{amountStr}</td>
-                                <td className="px-3 py-2">
-                                    <div className="flex items-center gap-1">
-                                        <span>{symbol}</span>
-                                    </div>
-                                </td>
-                                {/* <td className="px-3 py-2">
-                                    <button
-                                        type="button"
-                                        className="cursor-pointer inline-flex items-center gap-0.5 text-primary hover:underline"
-                                    >
-                                        ({MOCK_TX_COUNT}/{MOCK_TX_COUNT}) Detail
-                                        <ChevronRight className="h-3 w-3" />
-                                    </button>
-                                </td> */}
-                            </tr>
+                                    </td>
+                                    <td className="px-3 py-2 font-mono">{amountStr}</td>
+                                    <td className="px-3 py-2 font-mono">{amountStr}</td>
+                                    <td className="px-3 py-2">
+                                        <div className="flex items-center gap-1">
+                                            <span>{symbol}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

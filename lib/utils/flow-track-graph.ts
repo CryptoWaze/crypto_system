@@ -7,7 +7,13 @@ import type {
     FlowStep,
 } from '@/lib/types/tracking';
 
-export type FlowGraphEdgeWithTimestamp = FlowGraphEdge & { timestamp?: string; flowIndex?: number; chainIconUrl?: string };
+export type EdgeTransactionItem = { amount: number; amountRaw: string; txHash: string; timestamp?: string };
+export type FlowGraphEdgeWithTimestamp = FlowGraphEdge & {
+    timestamp?: string;
+    flowIndex?: number;
+    chainIconUrl?: string;
+    transactions?: EdgeTransactionItem[];
+};
 export type FlowGraphWithTimestamps = {
     nodes: FlowGraphNode[];
     edges: FlowGraphEdgeWithTimestamp[];
