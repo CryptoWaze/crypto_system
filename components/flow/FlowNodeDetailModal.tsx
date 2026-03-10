@@ -157,9 +157,7 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
                     {NodeIcon}
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                            {hasTitleLayout ? (
-                                <h2 className="font-sans text-base font-bold text-foreground truncate">{title}</h2>
-                            ) : null}
+                            {hasTitleLayout ? <h2 className="font-sans text-base font-bold text-foreground truncate">{title}</h2> : null}
                             {!isSeedNode && (
                                 <Button
                                     type="button"
@@ -271,7 +269,7 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-1">
-                                                            <BinanceLogoIcon size={12} />
+                                                            {iconUrl ? <ChainIcon src={iconUrl} size={12} /> : <BinanceLogoIcon size={12} />}
                                                             <span className="font-medium truncate">
                                                                 {transfer.counterparty
                                                                     ? `${transfer.counterparty.slice(0, 6)}…${transfer.counterparty.slice(-4)}`
