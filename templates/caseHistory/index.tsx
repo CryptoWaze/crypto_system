@@ -114,6 +114,7 @@ export function CaseHistoryTemplate() {
                     caseName={caseName}
                     endpointExchangeName={endpointExchangeName}
                     endpointHotWalletLabel={endpointHotWalletLabel}
+                    caseId={id}
                 />
             </main>
         </div>
