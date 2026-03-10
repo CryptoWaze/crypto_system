@@ -10,10 +10,7 @@ import type { Edge } from '@xyflow/react';
 function BinanceLogoIcon({ size = 20 }: { size?: number }) {
     return (
         <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className="shrink-0">
-            <path
-                fill="#F3BA2F"
-                d="M16 2l6 8-6 8-6-8 6-8zm-8 8l6 6v6l-6 6-6-6v-6l6-6zm16 0l6 6v6l-6 6-6-6v-6l6-6zm-8 6l6 6 6 6-6 6-6-6-6-6 6-6z"
-            />
+            <path fill="#F3BA2F" d="M16 2l6 8-6 8-6-8 6-8zm-8 8l6 6v6l-6 6-6-6v-6l6-6zm16 0l6 6v6l-6 6-6-6v-6l6-6zm-8 6l6 6 6 6-6 6-6-6-6-6 6-6z" />
         </svg>
     );
 }
@@ -35,16 +32,18 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
     const toast = useToast();
     const source = edge.source;
     const target = edge.target;
-    const data = edge.data as {
-        fromLabel?: string;
-        toLabel?: string;
-        symbol?: string;
-        amount?: number;
-        amountRaw?: string;
-        dateStr?: string;
-        valueStr?: string;
-        txHash?: string;
-    } | undefined;
+    const data = edge.data as
+        | {
+              fromLabel?: string;
+              toLabel?: string;
+              symbol?: string;
+              amount?: number;
+              amountRaw?: string;
+              dateStr?: string;
+              valueStr?: string;
+              txHash?: string;
+          }
+        | undefined;
     const fromLabel = data?.fromLabel ?? source;
     const toLabel = data?.toLabel ?? target;
     const symbol = data?.symbol ?? '';
@@ -79,22 +78,11 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
             <header className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-2">
                 <h2 className="font-sans text-sm font-semibold text-foreground">Detalhes da transferência</h2>
                 <div className="flex items-center gap-1">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="cursor-pointer text-xs"
-                        aria-label="Exportar dados da página"
-                    >
+                    <Button variant="ghost" size="sm" className="cursor-pointer text-xs" aria-label="Exportar dados da página">
                         <Download className="mr-1.5 h-3.5 w-3.5" />
                         Exportar
                     </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 cursor-pointer rounded-md"
-                        onClick={onClose}
-                        aria-label="Fechar"
-                    >
+                    <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-md" onClick={onClose} aria-label="Fechar">
                         <X className="h-3.5 w-3.5" />
                     </Button>
                 </div>
@@ -114,7 +102,7 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                 <th className="px-3 py-2 text-left font-medium text-muted-foreground">Total Amount</th>
                                 <th className="px-3 py-2 text-left font-medium text-muted-foreground">Selected Amount</th>
                                 <th className="px-3 py-2 text-left font-medium text-muted-foreground">Token</th>
-                                <th className="px-3 py-2 text-left font-medium text-muted-foreground">Transaction List</th>
+                                {/* <th className="px-3 py-2 text-left font-medium text-muted-foreground">Transaction List</th> */}
                             </tr>
                         </thead>
                         <tbody>
@@ -125,9 +113,7 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                         <div className="min-w-0">
                                             <div className="font-medium truncate">{fromLabel}</div>
                                             <div className="flex items-center gap-1">
-                                                <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">
-                                                    {source}
-                                                </span>
+                                                <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{source}</span>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
@@ -147,9 +133,7 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                         <div className="min-w-0">
                                             <div className="font-medium truncate">{toLabel}</div>
                                             <div className="flex items-center gap-1">
-                                                <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">
-                                                    {target}
-                                                </span>
+                                                <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{target}</span>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
@@ -167,11 +151,10 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                 <td className="px-3 py-2 font-mono">{amountStr}</td>
                                 <td className="px-3 py-2">
                                     <div className="flex items-center gap-1">
-                                        <BinanceLogoIcon size={12} />
                                         <span>{symbol}</span>
                                     </div>
                                 </td>
-                                <td className="px-3 py-2">
+                                {/* <td className="px-3 py-2">
                                     <button
                                         type="button"
                                         className="cursor-pointer inline-flex items-center gap-0.5 text-primary hover:underline"
@@ -179,7 +162,7 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                         ({MOCK_TX_COUNT}/{MOCK_TX_COUNT}) Detail
                                         <ChevronRight className="h-3 w-3" />
                                     </button>
-                                </td>
+                                </td> */}
                             </tr>
                         </tbody>
                     </table>
