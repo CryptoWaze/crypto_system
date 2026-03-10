@@ -1,6 +1,6 @@
 import type { FlowGraphNode } from '@/lib/types/tracking';
 import type { CaseByIdApiResponse } from '@/lib/types/case-api';
-import type { FlowGraphEdgeWithTimestamp, FlowGraphWithTimestamps } from './flow-track-graph';
+import type { EdgeTransactionItem, FlowGraphEdgeWithTimestamp, FlowGraphWithTimestamps } from './flow-track-graph';
 
 function trimSymbol(s: string | undefined | null): string {
     return (s ?? '').trim() || '—';
@@ -109,12 +109,27 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
 
     const edges: FlowGraphEdgeWithTimestamp[] = [];
     const returnSourceNodeIds = new Set<string>();
-    const seenEdgeKeys = new Set<string>();
+    const seenSeedEdgeKeys = new Set<string>();
     let flowIndex = 0;
 
-    function edgeKey(from: string, to: string, txHash: string, amount: number): string {
+    function seedEdgeKey(from: string, to: string, txHash: string, amount: number): string {
         return `${from ?? ''}|${to ?? ''}|${txHash ?? ''}|${amount}`;
     }
+
+    type ConsolidatedEdge = {
+        from: string;
+        to: string;
+        symbol: string;
+        amount: number;
+        amountRaw: string;
+        txHash: string;
+        outcome?: 'SUCCESS' | 'NO_OUTBOUND' | 'MAX_WALLETS_REACHED' | 'EXHAUSTED_OPTIONS';
+        timestamp?: string;
+        flowIndex: number;
+        chainIconUrl?: string;
+        transactions: EdgeTransactionItem[];
+    };
+    const consolidatedByKey = new Map<string, ConsolidatedEdge>();
 
     for (const seed of seeds) {
         if (!seed.txHash) continue;
@@ -134,9 +149,9 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
         };
         for (const toAddr of initialAddrs) {
             if (!toAddr) continue;
-            const key = edgeKey(seed.txHash, toAddr, seed.txHash, amountNum);
-            if (seenEdgeKeys.has(key)) continue;
-            seenEdgeKeys.add(key);
+            const key = seedEdgeKey(seed.txHash, toAddr, seed.txHash, amountNum);
+            if (seenSeedEdgeKeys.has(key)) continue;
+            seenSeedEdgeKeys.add(key);
             edges.push({
                 from: seed.txHash,
                 to: toAddr,
@@ -167,25 +182,46 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
             const amountNum = Number.isFinite(amount) ? amount : 0;
             const fromAddr = e.fromAddress ?? '';
             const txHash = e.txHash ?? '';
-            const key = edgeKey(fromAddr, toAddr ?? '', txHash, amountNum);
-            if (seenEdgeKeys.has(key)) {
-                if (toAddr) visitedInFlow.add(toAddr);
+            if (!toAddr) {
                 if (e.fromAddress) visitedInFlow.add(e.fromAddress);
                 continue;
             }
-            seenEdgeKeys.add(key);
-            edges.push({
-                from: fromAddr,
-                to: e.toAddress,
-                symbol: trimSymbol(e.transferSymbol) || trimSymbol(flow.tokenSymbol),
+            const symbol = trimSymbol(e.transferSymbol) || trimSymbol(flow.tokenSymbol);
+            const txTimestamp = tx?.timestamp ?? '';
+            const consolidateKey = `${fromAddr}|${toAddr}|${symbol}`;
+            const existing = consolidatedByKey.get(consolidateKey);
+            const item: EdgeTransactionItem = {
                 amount: amountNum,
                 amountRaw: e.transferAmountRaw ?? '0',
                 txHash,
-                outcome: e.outcome,
-                ...(tx?.timestamp ? { timestamp: tx.timestamp } : {}),
-                flowIndex: f,
-                ...(flow.chainIconUrl ? { chainIconUrl: flow.chainIconUrl } : {}),
-            });
+                ...(txTimestamp ? { timestamp: txTimestamp } : {}),
+            };
+            if (existing) {
+                existing.amount += amountNum;
+                existing.transactions.push(item);
+                if (txTimestamp && (!existing.timestamp || txTimestamp > existing.timestamp)) {
+                    existing.timestamp = txTimestamp;
+                    existing.txHash = txHash;
+                    existing.amountRaw = e.transferAmountRaw ?? existing.amountRaw;
+                    existing.outcome = e.outcome;
+                    existing.flowIndex = f;
+                    if (flow.chainIconUrl) existing.chainIconUrl = flow.chainIconUrl;
+                }
+            } else {
+                consolidatedByKey.set(consolidateKey, {
+                    from: fromAddr,
+                    to: toAddr,
+                    symbol,
+                    amount: amountNum,
+                    amountRaw: e.transferAmountRaw ?? '0',
+                    txHash,
+                    outcome: e.outcome,
+                    timestamp: txTimestamp || undefined,
+                    flowIndex: f,
+                    transactions: [item],
+                    ...(flow.chainIconUrl ? { chainIconUrl: flow.chainIconUrl } : {}),
+                });
+            }
             if (toAddr) {
                 visitedInFlow.add(toAddr);
             }
@@ -193,6 +229,23 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
                 visitedInFlow.add(e.fromAddress);
             }
         }
+    }
+
+    for (const c of consolidatedByKey.values()) {
+        const edgePayload: FlowGraphEdgeWithTimestamp = {
+            from: c.from,
+            to: c.to,
+            symbol: c.symbol,
+            amount: c.amount,
+            amountRaw: c.amountRaw,
+            txHash: c.txHash,
+            outcome: c.outcome,
+            ...(c.timestamp ? { timestamp: c.timestamp } : {}),
+            flowIndex: c.flowIndex,
+            ...(c.chainIconUrl ? { chainIconUrl: c.chainIconUrl } : {}),
+        };
+        if (c.transactions.length > 0) edgePayload.transactions = c.transactions;
+        edges.push(edgePayload);
     }
 
     return { nodes, edges, returnSourceNodeIds: Array.from(returnSourceNodeIds) };
