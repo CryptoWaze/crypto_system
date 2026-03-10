@@ -109,7 +109,12 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
 
     const edges: FlowGraphEdgeWithTimestamp[] = [];
     const returnSourceNodeIds = new Set<string>();
+    const seenEdgeKeys = new Set<string>();
     let flowIndex = 0;
+
+    function edgeKey(from: string, to: string, txHash: string, amount: number): string {
+        return `${from ?? ''}|${to ?? ''}|${txHash ?? ''}|${amount}`;
+    }
 
     for (const seed of seeds) {
         if (!seed.txHash) continue;
@@ -129,6 +134,9 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
         };
         for (const toAddr of initialAddrs) {
             if (!toAddr) continue;
+            const key = edgeKey(seed.txHash, toAddr, seed.txHash, amountNum);
+            if (seenEdgeKeys.has(key)) continue;
+            seenEdgeKeys.add(key);
             edges.push({
                 from: seed.txHash,
                 to: toAddr,
@@ -156,13 +164,23 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
             }
             const tx = flowTransactions[i];
             const amount = parseFloat(e.transferAmountDecimal ?? '0');
+            const amountNum = Number.isFinite(amount) ? amount : 0;
+            const fromAddr = e.fromAddress ?? '';
+            const txHash = e.txHash ?? '';
+            const key = edgeKey(fromAddr, toAddr ?? '', txHash, amountNum);
+            if (seenEdgeKeys.has(key)) {
+                if (toAddr) visitedInFlow.add(toAddr);
+                if (e.fromAddress) visitedInFlow.add(e.fromAddress);
+                continue;
+            }
+            seenEdgeKeys.add(key);
             edges.push({
-                from: e.fromAddress,
+                from: fromAddr,
                 to: e.toAddress,
                 symbol: trimSymbol(e.transferSymbol) || trimSymbol(flow.tokenSymbol),
-                amount: Number.isFinite(amount) ? amount : 0,
+                amount: amountNum,
                 amountRaw: e.transferAmountRaw ?? '0',
-                txHash: e.txHash ?? '',
+                txHash,
                 outcome: e.outcome,
                 ...(tx?.timestamp ? { timestamp: tx.timestamp } : {}),
                 flowIndex: f,

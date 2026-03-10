@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, memo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, memo, useState } from 'react';
 import {
     ReactFlow,
     Background,
@@ -23,6 +23,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import type { FlowGraph, FlowGraphEdge } from '@/lib/types/tracking';
 import { FlowNodeDetailModal } from './FlowNodeDetailModal';
 import { FlowEdgeDetailModal } from './FlowEdgeDetailModal';
+import { EditNameTagModal } from './EditNameTagModal';
 
 const LABEL_WIDTH = 300;
 const LABEL_HEIGHT = 52;
@@ -63,6 +64,8 @@ function BinanceLogoIcon({ size = 28 }: { size?: number }) {
 
 const SOURCE_HANDLE_STYLE = { background: 'rgba(91,141,239,0.5)', border: 'none', width: 10, height: 10, zIndex: 10 };
 
+const FlowGraphEditContext = createContext<{ openEditNameTag: (nodeId: string) => void } | null>(null);
+
 function ChainIcon({ src, size = 24 }: { src: string; size?: number }) {
     if (!src || typeof src !== 'string') return null;
     return (
@@ -78,8 +81,9 @@ function ChainIcon({ src, size = 24 }: { src: string; size?: number }) {
     );
 }
 
-function FlowTrackNode({ data, sourcePosition, targetPosition, dragging, selected }: NodeProps) {
+function FlowTrackNode({ id, data, sourcePosition, targetPosition, dragging, selected }: NodeProps) {
     const [hovered, setHovered] = useState(false);
+    const editContext = useContext(FlowGraphEditContext);
     const label = (data?.label as string) ?? '';
     const title = data?.title as string | undefined;
     const endpointExchangeIconUrl = data?.endpointExchangeIconUrl as string | undefined;
@@ -129,12 +133,18 @@ function FlowTrackNode({ data, sourcePosition, targetPosition, dragging, selecte
                         </span>
                     </div>
                 )}
-                {hovered && !(data?.isFirstNode === true) && (
+                {hovered && !(data?.isSeedNode === true) && (
                     <div className="absolute flex gap-1 items-center cursor-pointer" style={{ bottom: 4, right: 6 }}>
                         <button
+                            type="button"
                             className="flex items-center justify-center rounded-md p-1 transition-colors cursor-pointer hover:opacity-90 hover:scale-105"
                             style={{ background: 'rgba(91,141,239,0.18)', border: '1px solid rgba(91,141,239,0.35)', color: '#8babf5' }}
                             onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                editContext?.openEditNameTag(id);
+                            }}
                         >
                             <Pencil size={12} />
                         </button>
@@ -258,7 +268,7 @@ export type FlowGraphWithTimestamps = Omit<FlowGraph, 'edges'> & {
 const NODE_WIDTH = 230;
 const NODE_HEIGHT = 76;
 const HORIZONTAL_GAP = 280;
-const VERTICAL_GAP = 100;
+const VERTICAL_GAP = 52;
 
 function getOutEdges(graph: FlowGraph): Record<string, string[]> {
     const out: Record<string, string[]> = {};
@@ -349,12 +359,56 @@ function getTreeLayoutPositions(graph: FlowGraph): Map<string, { x: number; y: n
         for (const id of ids) nodeToLevel.set(id, level);
     }
 
-    for (const [level, ids] of levelToIds) {
-        for (let i = 0; i < ids.length; i++) {
-            const id = ids[i];
+    const inSources = new Map<string, string[]>();
+    for (const e of edges) {
+        const fromLevel = nodeToLevel.get(e.from) ?? 0;
+        const toLevel = nodeToLevel.get(e.to) ?? 0;
+        if (toLevel === fromLevel + 1) {
+            const list = inSources.get(e.to) ?? [];
+            list.push(e.from);
+            inSources.set(e.to, list);
+        }
+    }
+
+    const levels = Array.from(levelToIds.keys()).sort((a, b) => a - b);
+    for (const level of levels) {
+        const ids = levelToIds.get(level)!;
+        let orderedIds: string[];
+        if (level === 0) {
+            orderedIds = [...ids];
+        } else {
+            const prevLevel = level - 1;
+            orderedIds = [...ids].sort((a, b) => {
+                const predY = (id: string) => {
+                    const sources = inSources.get(id) ?? [];
+                    if (sources.length === 0) return 0;
+                    const ys = sources.map((s) => positions.get(s)?.y ?? 0);
+                    return ys.reduce((s, y) => s + y, 0) / ys.length;
+                };
+                return predY(a) - predY(b);
+            });
+        }
+        for (let i = 0; i < orderedIds.length; i++) {
+            const id = orderedIds[i];
             const x = level * (NODE_WIDTH + HORIZONTAL_GAP);
             const y = i * (NODE_HEIGHT + VERTICAL_GAP);
             positions.set(id, { x, y });
+        }
+    }
+
+    let prevCenterY: number | null = null;
+    for (const level of levels) {
+        const ids = levelToIds.get(level)!;
+        const ys = ids.map((id) => positions.get(id)!.y);
+        const centerY = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
+        if (prevCenterY !== null && ids.length > 0) {
+            const delta = prevCenterY - centerY;
+            for (const id of ids) {
+                const pos = positions.get(id)!;
+                positions.set(id, { ...pos, y: pos.y + delta });
+            }
+        } else if (ids.length > 0) {
+            prevCenterY = centerY;
         }
     }
 
@@ -401,16 +455,22 @@ function flowGraphToReactFlow(
 ): { nodes: Node[]; edges: Edge[] } {
     const order = orderNodeIds(graph);
     const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
+    const inDegree: Record<string, number> = {};
+    for (const node of graph.nodes) inDegree[node.id] = 0;
+    for (const edge of graph.edges) inDegree[edge.to] = (inDegree[edge.to] ?? 0) + 1;
+    const seedNodeIds = new Set(graph.nodes.filter((n) => inDegree[n.id] === 0).map((n) => n.id));
+
     const positionMap = getTreeLayoutPositions(graph);
     const outEdgesBySource = getOutEdges(graph);
     const returnSourceIds = new Set((graph as FlowGraphWithTimestamps).returnSourceNodeIds ?? []);
     const nodes: Node[] = order.map((id, i) => {
         const n = nodeMap.get(id);
         const label = n?.label ?? id;
+        const isSeedNode = seedNodeIds.has(id);
         let title: string | undefined;
         if (n?.title) {
             title = n.title;
-        } else if (i === 0 && caseName) {
+        } else if (isSeedNode && caseName) {
             title = `${capitalizeFirst(caseName)} Address`;
         }
         const pos = positionMap.get(id) ?? { x: i * (NODE_WIDTH + HORIZONTAL_GAP), y: 0 };
@@ -427,7 +487,7 @@ function flowGraphToReactFlow(
                 hasOutgoing: connectedCount > 0,
                 connectedCount,
                 connectedIds,
-                isFirstNode: i === 0,
+                isSeedNode,
                 ...(n?.chainIconUrl ? { chainIconUrl: n.chainIconUrl } : {}),
                 ...(n?.endpointExchangeIconUrl ? { endpointExchangeIconUrl: n.endpointExchangeIconUrl } : {}),
             },
@@ -564,6 +624,20 @@ function FlowGraphViewInteractive({ graph, className, caseName, endpointExchange
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+    const [editNameTagNode, setEditNameTagNode] = useState<Node | null>(null);
+
+    const handleOpenEditNameTag = useCallback(
+        (nodeId: string) => {
+            const node = nodes.find((n) => n.id === nodeId);
+            if (node) setEditNameTagNode(node);
+        },
+        [nodes],
+    );
+
+    const editContextValue = useMemo(
+        () => ({ openEditNameTag: handleOpenEditNameTag }),
+        [handleOpenEditNameTag],
+    );
 
     const onNodesChangeHandler: OnNodesChange = useCallback(
         (changes) => {
@@ -611,6 +685,7 @@ function FlowGraphViewInteractive({ graph, className, caseName, endpointExchange
     }, [edges, selectedEdge]);
 
     return (
+        <FlowGraphEditContext.Provider value={editContextValue}>
         <div className={`relative h-full w-full ${className ?? ''}`}>
             <div
                 className="flow-track-graph absolute inset-0 rounded-xl"
@@ -640,11 +715,32 @@ function FlowGraphViewInteractive({ graph, className, caseName, endpointExchange
             </div>
             {selectedNode && (
                 <div className="absolute left-3 top-3 bottom-3 z-20">
-                    <FlowNodeDetailModal node={selectedNode} onClose={() => setSelectedNode(null)} className="h-full" />
+                    <FlowNodeDetailModal
+                        node={selectedNode}
+                        onClose={() => setSelectedNode(null)}
+                        onEditNameTag={() => setEditNameTagNode(selectedNode)}
+                        className="h-full"
+                    />
                 </div>
             )}
+            <EditNameTagModal
+                open={!!editNameTagNode}
+                onClose={() => setEditNameTagNode(null)}
+                chain="BSC"
+                address={editNameTagNode?.id ?? ''}
+                currentNameTag={editNameTagNode ? ((editNameTagNode.data?.title as string) ?? '') : ''}
+                placeholder="Binance: Deposit Address"
+                onConfirm={(newNameTag) => {
+                    if (!editNameTagNode) return;
+                    const nodeId = editNameTagNode.id;
+                    setNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, title: newNameTag } } : n)));
+                    setSelectedNode((prev) => (prev?.id === nodeId && prev ? { ...prev, data: { ...prev.data, title: newNameTag } } : prev));
+                    setEditNameTagNode(null);
+                }}
+            />
             {selectedEdge && <FlowEdgeDetailModal edge={selectedEdge} onClose={() => setSelectedEdge(null)} />}
         </div>
+        </FlowGraphEditContext.Provider>
     );
 }
 

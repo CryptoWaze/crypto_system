@@ -1,13 +1,15 @@
 'use client';
 
-import { useCallback } from 'react';
-import { Pencil, Copy, GripVertical, X, Search, Filter, ChevronRight, Zap, Check, Info } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { Pencil, Copy, X, Search, ChevronRight, Check, Info, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/lib/toast-context';
 import type { Node } from '@xyflow/react';
+import { getAddressTopTransfers } from '@/lib/services/addresses/get-address-top-transfers.service';
+import type { WalletTransfer } from '@/lib/types/address-top-transfers';
 
 function BinanceLogoIcon({ size = 24 }: { size?: number }) {
     return (
@@ -17,38 +19,121 @@ function BinanceLogoIcon({ size = 24 }: { size?: number }) {
     );
 }
 
+function ChainIcon({ src, size = 24 }: { src: string; size?: number }) {
+    if (!src || typeof src !== 'string') return null;
+    return (
+        <img
+            src={src}
+            alt=""
+            width={size}
+            height={size}
+            className="shrink-0 rounded-full object-contain"
+            style={{ width: size, height: size }}
+            referrerPolicy="no-referrer"
+        />
+    );
+}
+
 const MOCK_BALANCE_BNB = '0.00588';
 const MOCK_BALANCE_USD = 3;
-const MOCK_COUNTERPARTIES = [
-    {
-        label: 'LABEL_0x520e',
-        address: '0x520e6b02925c77f165eeb57e74be051ca94bf2ce',
-        risk: 'low',
-        direction: 'IN' as const,
-        token: 'BNB',
-        transfer: '1/1',
-    },
-    {
-        label: 'Binance: Hot Wallet',
-        address: '0x8894e0a0c962cb723c1976a4421c5949be2d4e3',
-        risk: 'none',
-        direction: 'OUT' as const,
-        token: 'BNB',
-        transfer: '4/4',
-    },
-];
+
+const PANEL_WIDTH = 420;
 
 type FlowNodeDetailModalProps = {
     node: Node;
     onClose: () => void;
+    onEditNameTag?: () => void;
+    onNameTagChange?: (nodeId: string, newNameTag: string) => void;
     className?: string;
 };
 
-export function FlowNodeDetailModal({ node, onClose, className }: FlowNodeDetailModalProps) {
+function formatTransferAmount(amount: number): string {
+    if (!Number.isFinite(amount)) return '—';
+    if (amount >= 0.01) return amount.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+    if (amount === 0) return '0';
+    const exp = Math.floor(Math.log10(amount));
+    const mantissa = amount / Math.pow(10, exp);
+    return mantissa.toFixed(4).replace('.', ',') + 'e' + exp;
+}
+
+function chainLabel(chain: string): string {
+    if (chain === 'bsc-mainnet') return 'BSC';
+    if (chain === 'eth-mainnet') return 'ETH';
+    return chain;
+}
+
+export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagChange, className }: FlowNodeDetailModalProps) {
     const toast = useToast();
+    const { data: session } = useSession();
+    const accessToken = (session?.user as { accessToken?: string } | undefined)?.accessToken;
+
+    const [topTransfersLoading, setTopTransfersLoading] = useState(false);
+    const [topTransfersError, setTopTransfersError] = useState<string | null>(null);
+    const [topTransfersRows, setTopTransfersRows] = useState<{ chain: string; transfer: WalletTransfer }[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+
     const address = node.id;
-    const title = (node.data?.title as string) ?? 'Binance: Deposit Address';
+    const title = node.data?.title as string | undefined;
     const label = (node.data?.label as string) ?? address;
+    const endpointExchangeIconUrl = node.data?.endpointExchangeIconUrl as string | undefined;
+    const chainIconUrl = node.data?.chainIconUrl as string | undefined;
+    const iconUrl = endpointExchangeIconUrl ?? chainIconUrl;
+    const hasTitleLayout = Boolean(title);
+    const isSeedNode = node.data?.isSeedNode === true;
+    const NodeIcon = iconUrl ? <ChainIcon src={iconUrl} size={32} /> : <BinanceLogoIcon size={32} />;
+
+    useEffect(() => {
+        if (!address || !accessToken) {
+            setTopTransfersRows([]);
+            setTopTransfersError(null);
+            return;
+        }
+        let cancelled = false;
+        setTopTransfersLoading(true);
+        setTopTransfersError(null);
+        getAddressTopTransfers(address, accessToken)
+            .then((result) => {
+                if (cancelled) return;
+                setTopTransfersLoading(false);
+                if (!result.ok) {
+                    setTopTransfersError(result.message);
+                    setTopTransfersRows([]);
+                    return;
+                }
+                const rows: { chain: string; transfer: WalletTransfer }[] = [];
+                for (const [chain, data] of Object.entries(result.data)) {
+                    if (data?.transfers?.length) {
+                        for (const transfer of data.transfers) {
+                            rows.push({ chain, transfer });
+                        }
+                    }
+                }
+                setTopTransfersRows(rows);
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setTopTransfersLoading(false);
+                    setTopTransfersError('Erro ao carregar transferências.');
+                    setTopTransfersRows([]);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [address, accessToken]);
+
+    const filteredRows = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return topTransfersRows;
+        return topTransfersRows.filter(({ transfer }) => {
+            const cp = (transfer.counterparty ?? '').toLowerCase();
+            const from = (transfer.from ?? '').toLowerCase();
+            const to = (transfer.to ?? '').toLowerCase();
+            const sym = (transfer.symbol ?? '').toLowerCase();
+            const tx = (transfer.txHash ?? '').toLowerCase();
+            return cp.includes(q) || from.includes(q) || to.includes(q) || sym.includes(q) || tx.includes(q);
+        });
+    }, [topTransfersRows, searchQuery]);
 
     const handleCopyAddress = useCallback(async () => {
         try {
@@ -62,23 +147,39 @@ export function FlowNodeDetailModal({ node, onClose, className }: FlowNodeDetail
     return (
         <aside
             className={cn(
-                'flex h-full w-max flex-col overflow-hidden rounded-xl border border-l-0 border-border bg-card text-card-foreground shadow-[4px_0_24px_rgba(0,0,0,0.35)]',
+                'flex h-full flex-col overflow-hidden rounded-xl border border-l-0 border-border bg-card text-card-foreground shadow-[4px_0_24px_rgba(0,0,0,0.35)]',
                 className,
             )}
+            style={{ width: PANEL_WIDTH, minWidth: PANEL_WIDTH, maxWidth: PANEL_WIDTH }}
         >
-            <div className="flex-1 overflow-y-auto p-4">
-                <div className="flex items-start gap-3">
-                    <BinanceLogoIcon size={32} />
+            <div className="modal-cases-list flex flex-1 flex-col min-h-0 overflow-y-auto overflow-x-hidden p-4">
+                <div className="flex items-start gap-3 shrink-0">
+                    {NodeIcon}
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                            <h2 className="font-sans text-base font-bold text-foreground truncate">{title}</h2>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 cursor-pointer rounded-md" aria-label="Editar">
-                                <Pencil className="h-3.5 w-3.5" />
-                            </Button>
+                            {hasTitleLayout ? (
+                                <h2 className="font-sans text-base font-bold text-foreground truncate">{title}</h2>
+                            ) : null}
+                            {!isSeedNode && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 shrink-0 cursor-pointer rounded-md"
+                                    aria-label={hasTitleLayout ? 'Editar etiqueta de nome' : 'Adicionar etiqueta de nome'}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        onEditNameTag?.();
+                                    }}
+                                >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                            )}
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="ml-auto h-7 w-7 shrink-0 cursor-pointer rounded-md -mt-5 -mr-2"
+                                className={cn('h-7 w-7 shrink-0 cursor-pointer rounded-md', hasTitleLayout && '-mt-5 -mr-2', 'ml-auto')}
                                 onClick={onClose}
                                 aria-label="Fechar"
                             >
@@ -86,11 +187,17 @@ export function FlowNodeDetailModal({ node, onClose, className }: FlowNodeDetail
                             </Button>
                         </div>
                         <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-xs text-muted-foreground break-all">{address}</span>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 cursor-pointer rounded" onClick={handleCopyAddress} aria-label="Copiar endereço">
+                            <span className="font-mono text-xs text-muted-foreground break-all">{label}</span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0 cursor-pointer rounded"
+                                onClick={handleCopyAddress}
+                                aria-label="Copiar endereço"
+                            >
                                 <Copy className="h-3 w-3" />
                             </Button>
-                            <BinanceLogoIcon size={14} />
+                            {iconUrl ? <ChainIcon src={iconUrl} size={14} /> : <BinanceLogoIcon size={14} />}
                         </div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                             <span className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -104,7 +211,7 @@ export function FlowNodeDetailModal({ node, onClose, className }: FlowNodeDetail
                     </div>
                 </div>
 
-                <div className="mt-4 space-y-1 rounded-lg border border-border bg-muted/20 p-3">
+                {/* <div className="mt-4 space-y-1 rounded-lg border border-border bg-muted/20 p-3 shrink-0">
                     <p className="text-xs text-muted-foreground">
                         BNB Balance:{' '}
                         <span className="font-semibold text-foreground">
@@ -114,91 +221,89 @@ export function FlowNodeDetailModal({ node, onClose, className }: FlowNodeDetail
                     <p className="text-xs text-muted-foreground">
                         Total value on BSC: <span className="font-semibold text-foreground">${MOCK_BALANCE_USD}</span>
                     </p>
-                </div>
+                </div> */}
 
-                <Tabs defaultValue="related" className="mt-4">
-                    <TabsList className="h-9 w-full justify-start rounded-lg bg-muted/50 p-0">
-                        <TabsTrigger
-                            value="related"
-                            className="cursor-pointer rounded-md px-4 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                        >
-                            Related Address
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="transfer"
-                            className="cursor-pointer rounded-md px-4 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                        >
-                            Transfer
-                        </TabsTrigger>
-                    </TabsList>
-                    <div className="mt-3 flex gap-2">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                            <Input placeholder="Address/Label" className="h-8 pl-8 text-xs" />
-                        </div>
-                        <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 cursor-pointer rounded-md" aria-label="Filtrar">
-                            <Filter className="h-3.5 w-3.5" />
-                        </Button>
+                <div className="mt-4 flex flex-col">
+                    <p className="text-xs font-medium text-muted-foreground mb-2 shrink-0">Transferências</p>
+                    <div className="relative shrink-0">
+                        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            placeholder="Buscar por endereço, token ou hash..."
+                            className="h-8 pl-8 text-xs"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
-                    <TabsContent value="related" className="mt-3">
-                        <div className="rounded-lg border border-border overflow-hidden">
-                            <table className="w-full text-xs">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/30">
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground">Counterparty</th>
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground">Risk</th>
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground">
+                    <div className="mt-3 rounded-lg border border-border overflow-x-auto modal-cases-list">
+                        {topTransfersLoading && (
+                            <div className="flex items-center justify-center gap-2 py-6">
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">Carregando transferências...</span>
+                            </div>
+                        )}
+                        {!topTransfersLoading && topTransfersError && <p className="p-3 text-xs text-muted-foreground">{topTransfersError}</p>}
+                        {!topTransfersLoading && !topTransfersError && topTransfersRows.length === 0 && (
+                            <p className="p-3 text-xs text-muted-foreground">Nenhuma transferência recente encontrada para esta carteira.</p>
+                        )}
+                        {!topTransfersLoading && !topTransfersError && topTransfersRows.length > 0 && filteredRows.length === 0 && (
+                            <p className="p-3 text-xs text-muted-foreground">Nenhum resultado para &quot;{searchQuery.trim()}&quot;.</p>
+                        )}
+                        {!topTransfersLoading && !topTransfersError && filteredRows.length > 0 && (
+                            <table className="w-full text-xs border-collapse">
+                                <thead className="sticky top-0 bg-muted/30 z-10">
+                                    <tr className="border-b border-border">
+                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Counterparty</th>
+                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">
                                             Direction
                                             <Info className="ml-0.5 inline h-3 w-3" />
                                         </th>
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground">Token</th>
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground">Transfer</th>
+                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Token</th>
+                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Transfer</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {MOCK_COUNTERPARTIES.map((row, i) => (
-                                        <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                                            <td className="px-2 py-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer rounded" aria-label="Visualizar">
-                                                        <span className="text-muted-foreground">👁</span>
-                                                    </Button>
+                                    {filteredRows.map(({ chain, transfer }, i) => (
+                                        <tr
+                                            key={`${chain}-${transfer.txHash}-${i}`}
+                                            className="border-b border-border/50 last:border-0 hover:bg-muted/20"
+                                        >
+                                            <td className="px-2 py-2 whitespace-nowrap">
+                                                <div className="flex items-center gap-2 min-w-0">
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-1">
                                                             <BinanceLogoIcon size={12} />
-                                                            <span className="font-medium truncate">{row.label}</span>
+                                                            <span className="font-medium truncate">
+                                                                {transfer.counterparty
+                                                                    ? `${transfer.counterparty.slice(0, 6)}…${transfer.counterparty.slice(-4)}`
+                                                                    : transfer.direction === 'OUT'
+                                                                      ? (transfer.to ?? '').slice(0, 6) + '…'
+                                                                      : (transfer.from ?? '').slice(0, 6) + '…'}
+                                                            </span>
                                                         </div>
-                                                        <span className="font-mono text-[10px] text-muted-foreground truncate block">
-                                                            {row.address}
+                                                        <span className="font-mono text-[10px] text-muted-foreground truncate block max-w-[180px]">
+                                                            {transfer.counterparty || (transfer.direction === 'OUT' ? transfer.to : transfer.from)}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-2 py-2">
-                                                {row.risk === 'none' ? (
-                                                    <Check className="h-3.5 w-3.5 text-green-500" />
-                                                ) : (
-                                                    <Zap className="h-3.5 w-3.5 text-green-500" />
-                                                )}
+                                            <td className="px-2 py-2 whitespace-nowrap">
+                                                <span className={transfer.direction === 'IN' ? 'text-green-500' : 'text-red-500'}>
+                                                    {transfer.direction}
+                                                </span>
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <span className={row.direction === 'IN' ? 'text-green-500' : 'text-red-500'}>{row.direction}</span>
-                                            </td>
-                                            <td className="px-2 py-2 text-muted-foreground">$</td>
-                                            <td className="px-2 py-2">
-                                                <span className="text-muted-foreground">{row.transfer}</span>
+                                            <td className="px-2 py-2 text-muted-foreground whitespace-nowrap">{transfer.symbol || '—'}</td>
+                                            <td className="px-2 py-2 whitespace-nowrap">
+                                                <span className="text-muted-foreground">{formatTransferAmount(transfer.amount)}</span>
+                                                <span className="ml-1 text-muted-foreground/70">{chainLabel(chain)}</span>
                                                 <ChevronRight className="ml-0.5 inline h-3 w-3" />
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="transfer" className="mt-3">
-                        <p className="text-xs text-muted-foreground">Lista de transferências (mock).</p>
-                    </TabsContent>
-                </Tabs>
+                        )}
+                    </div>
+                </div>
             </div>
         </aside>
     );
