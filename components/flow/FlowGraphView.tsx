@@ -569,6 +569,31 @@ function FitViewOnce() {
     return null;
 }
 
+const GRAPH_LAYOUT_STORAGE_PREFIX = 'crypto_forense_graph_layout_';
+
+function getStoredLayout(caseId: string | null | undefined): Record<string, { x: number; y: number }> {
+    if (typeof window === 'undefined') return {};
+    const key = `${GRAPH_LAYOUT_STORAGE_PREFIX}${caseId ?? 'default'}`;
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw) as Record<string, { x: number; y: number }>;
+        return typeof parsed === 'object' && parsed !== null ? parsed : {};
+    } catch {
+        return {};
+    }
+}
+
+function setStoredLayout(caseId: string | null | undefined, positions: Record<string, { x: number; y: number }>): void {
+    if (typeof window === 'undefined') return;
+    const key = `${GRAPH_LAYOUT_STORAGE_PREFIX}${caseId ?? 'default'}`;
+    try {
+        localStorage.setItem(key, JSON.stringify(positions));
+    } catch {
+        /* ignore */
+    }
+}
+
 type FlowGraphViewProps = {
     graph: FlowGraph | FlowGraphWithTimestamps;
     className?: string;
@@ -576,6 +601,7 @@ type FlowGraphViewProps = {
     caseName?: string | null;
     endpointExchangeName?: string | null;
     endpointHotWalletLabel?: string | null;
+    caseId?: string | null;
 };
 
 const FlowGraphReadOnly = memo(function FlowGraphReadOnly({
@@ -617,11 +643,19 @@ const FlowGraphReadOnly = memo(function FlowGraphReadOnly({
     );
 });
 
-function FlowGraphViewInteractive({ graph, className, caseName, endpointExchangeName, endpointHotWalletLabel }: FlowGraphViewProps) {
-    const { nodes: initialNodes, edges: initialEdges } = useMemo(
-        () => flowGraphToReactFlow(graph, caseName, endpointExchangeName, endpointHotWalletLabel),
-        [graph, caseName, endpointExchangeName, endpointHotWalletLabel],
-    );
+function FlowGraphViewInteractive({ graph, className, caseName, endpointExchangeName, endpointHotWalletLabel, caseId }: FlowGraphViewProps) {
+    const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
+        const { nodes, edges } = flowGraphToReactFlow(graph, caseName, endpointExchangeName, endpointHotWalletLabel);
+        const saved = getStoredLayout(caseId);
+        const nodesWithSavedPositions = nodes.map((n) => {
+            const pos = saved[n.id];
+            if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+                return { ...n, position: { x: pos.x, y: pos.y } };
+            }
+            return n;
+        });
+        return { nodes: nodesWithSavedPositions, edges };
+    }, [graph, caseName, endpointExchangeName, endpointHotWalletLabel, caseId]);
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -646,6 +680,19 @@ function FlowGraphViewInteractive({ graph, className, caseName, endpointExchange
             onNodesChange(changes);
         },
         [onNodesChange],
+    );
+
+    const onNodeDragStop = useCallback(
+        (_evt: React.MouseEvent, _node: Node, nodesAfterDrag: Node[]) => {
+            const positions = getStoredLayout(caseId);
+            for (const n of nodesAfterDrag) {
+                if (n.position && typeof n.position.x === 'number' && typeof n.position.y === 'number') {
+                    positions[n.id] = { x: n.position.x, y: n.position.y };
+                }
+            }
+            setStoredLayout(caseId, positions);
+        },
+        [caseId],
     );
     const onEdgesChangeHandler: OnEdgesChange = useCallback(
         (changes) => {
@@ -701,6 +748,7 @@ function FlowGraphViewInteractive({ graph, className, caseName, endpointExchange
                     edges={edgesWithSelection}
                     onNodesChange={onNodesChangeHandler}
                     onEdgesChange={onEdgesChangeHandler}
+                    onNodeDragStop={onNodeDragStop}
                     onNodeClick={onNodeClick}
                     onEdgeClick={onEdgeClick}
                     minZoom={0.2}
