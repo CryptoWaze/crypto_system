@@ -6,13 +6,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/lib/toast-context';
 import type { Edge } from '@xyflow/react';
+import { ChainIcon, BinanceLogoIcon } from './FlowIcons';
 
-function BinanceLogoIcon({ size = 20 }: { size?: number }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className="shrink-0">
-            <path fill="#F3BA2F" d="M16 2l6 8-6 8-6-8 6-8zm-8 8l6 6v6l-6 6-6-6v-6l6-6zm16 0l6 6v6l-6 6-6-6v-6l6-6zm-8 6l6 6 6 6-6 6-6-6-6-6 6-6z" />
-        </svg>
-    );
+function EdgeEntityIcon({ iconUrl, size = 14 }: { iconUrl?: string; size?: number }) {
+    if (iconUrl) return <ChainIcon src={iconUrl} size={size} />;
+    return <BinanceLogoIcon size={size} />;
 }
 
 function formatAmount(value: number): string {
@@ -67,6 +65,8 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
         | {
               fromLabel?: string;
               toLabel?: string;
+              fromIconUrl?: string;
+              toIconUrl?: string;
               symbol?: string;
               amount?: number;
               amountRaw?: string;
@@ -135,27 +135,27 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                     <table className="w-full text-xs">
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
-                                <th className="px-3 py-2 text-left font-medium text-muted-foreground">From</th>
-                                <th className="px-3 py-2 text-left font-medium text-muted-foreground">To</th>
-                                <th className="px-3 py-2 text-left font-medium text-muted-foreground">Total Amount</th>
-                                <th className="px-3 py-2 text-left font-medium text-muted-foreground">Selected Amount</th>
-                                <th className="px-3 py-2 text-left font-medium text-muted-foreground">Token</th>
-                                {displayTransactions.length > 0 && (
-                                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Data</th>
-                                )}
+                                <th className="px-3 py-3 text-left font-medium text-muted-foreground">From</th>
+                                <th className="px-3 py-3 text-left font-medium text-muted-foreground">To</th>
+                                <th className="px-3 py-3 text-left font-medium text-muted-foreground">Total Amount</th>
+                                <th className="px-3 py-3 text-left font-medium text-muted-foreground">Selected Amount</th>
+                                <th className="px-3 py-3 text-left font-medium text-muted-foreground">Token</th>
+                                {displayTransactions.length > 0 && <th className="px-3 py-3 text-left font-medium text-muted-foreground">Data</th>}
                             </tr>
                         </thead>
                         <tbody>
                             {displayTransactions.length > 0 ? (
                                 displayTransactions.map((tx, idx) => (
                                     <tr key={idx} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                                        <td className="px-3 py-2">
+                                        <td className="px-3 py-3">
                                             <div className="flex items-center gap-2">
-                                                <BinanceLogoIcon size={14} />
+                                                <EdgeEntityIcon iconUrl={data?.fromIconUrl} size={14} />
                                                 <div className="min-w-0">
                                                     <div className="font-medium truncate">{fromLabel}</div>
                                                     <div className="flex items-center gap-1">
-                                                        <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{source}</span>
+                                                        <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">
+                                                            {source}
+                                                        </span>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -169,13 +169,15 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-3 py-2">
+                                        <td className="px-3 py-3">
                                             <div className="flex items-center gap-2">
-                                                <BinanceLogoIcon size={14} />
+                                                <EdgeEntityIcon iconUrl={data?.toIconUrl} size={14} />
                                                 <div className="min-w-0">
                                                     <div className="font-medium truncate">{toLabel}</div>
                                                     <div className="flex items-center gap-1">
-                                                        <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{target}</span>
+                                                        <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">
+                                                            {target}
+                                                        </span>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -189,25 +191,29 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-3 py-2 font-mono">{formatAmount(tx.amount)}</td>
-                                        <td className="px-3 py-2 font-mono">{formatAmount(tx.amount)}</td>
-                                        <td className="px-3 py-2">
+                                        <td className="px-3 py-3 font-mono">{formatAmount(tx.amount)}</td>
+                                        <td className="px-3 py-3 font-mono">{formatAmount(tx.amount)}</td>
+                                        <td className="px-3 py-3">
                                             <div className="flex items-center gap-1">
                                                 <span>{symbol}</span>
                                             </div>
                                         </td>
-                                        <td className="px-3 py-2 font-mono text-muted-foreground">{tx.timestamp ? formatTimestamp(tx.timestamp) : '—'}</td>
+                                        <td className="px-3 py-3 font-mono text-muted-foreground">
+                                            {tx.timestamp ? formatTimestamp(tx.timestamp) : '—'}
+                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                                    <td className="px-3 py-2">
+                                    <td className="px-3 py-3">
                                         <div className="flex items-center gap-2">
-                                            <BinanceLogoIcon size={14} />
+                                            <EdgeEntityIcon iconUrl={data?.fromIconUrl} size={14} />
                                             <div className="min-w-0">
                                                 <div className="font-medium truncate">{fromLabel}</div>
                                                 <div className="flex items-center gap-1">
-                                                    <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{source}</span>
+                                                    <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">
+                                                        {source}
+                                                    </span>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -221,13 +227,15 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-3 py-2">
+                                    <td className="px-3 py-3">
                                         <div className="flex items-center gap-2">
-                                            <BinanceLogoIcon size={14} />
+                                            <EdgeEntityIcon iconUrl={data?.toIconUrl} size={14} />
                                             <div className="min-w-0">
                                                 <div className="font-medium truncate">{toLabel}</div>
                                                 <div className="flex items-center gap-1">
-                                                    <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">{target}</span>
+                                                    <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">
+                                                        {target}
+                                                    </span>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -241,9 +249,9 @@ export function FlowEdgeDetailModal({ edge, onClose, className }: FlowEdgeDetail
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-3 py-2 font-mono">{amountStr}</td>
-                                    <td className="px-3 py-2 font-mono">{amountStr}</td>
-                                    <td className="px-3 py-2">
+                                    <td className="px-3 py-3 font-mono">{amountStr}</td>
+                                    <td className="px-3 py-3 font-mono">{amountStr}</td>
+                                    <td className="px-3 py-3">
                                         <div className="flex items-center gap-1">
                                             <span>{symbol}</span>
                                         </div>

@@ -266,6 +266,11 @@
     border-radius: 0;
     padding: 0 !important;
     box-shadow: none;
+    z-index: 0;
+    margin: 6px;
+}
+.flow-track-graph .react-flow__node:has(.flow-track-node--highlight) {
+    z-index: 10;
 }
 
 .flow-track-graph .flow-track-node {
@@ -292,8 +297,20 @@
         0 0 20px rgba(91, 141, 239, 0.5);
 }
 .flow-track-graph .react-flow__node .react-flow__handle {
-    background: #5b8def;
+    background: transparent !important;
+    border: none !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0;
     z-index: 10;
+}
+.flow-track-graph .react-flow__node .react-flow__handle-left,
+.flow-track-graph .react-flow__node .flow-track-handle-target {
+    left: 3px !important;
+    transform: translateY(-50%) !important;
+}
+.flow-track-graph .react-flow__node .react-flow__handle-right {
+    right: 3px !important;
 }
 .flow-track-graph .react-flow__edge-path {
     stroke: rgba(91, 141, 239, 0.7);

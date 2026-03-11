@@ -26,6 +26,15 @@ export type CaseByIdApiTransaction = {
   [key: string]: unknown;
 };
 
+export type CaseByIdApiFlowWallet = {
+  id: string;
+  nodeIndex?: number;
+  address?: string;
+  nickname?: string | null;
+  displayLabel?: string | null;
+  position?: 'default' | { x: number; y: number };
+};
+
 export type CaseByIdApiFlow = {
   id: string;
   chainSlug: string;
@@ -47,6 +56,7 @@ export type CaseByIdApiFlow = {
   hopsCount?: number;
   edges: CaseByIdApiEdge[];
   transactions?: CaseByIdApiTransaction[];
+  wallets?: CaseByIdApiFlowWallet[];
 };
 
 export type CaseByIdApiSeed = {

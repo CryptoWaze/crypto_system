@@ -4,6 +4,7 @@ export interface FlowGraphNode {
   title?: string;
   chainIconUrl?: string;
   endpointExchangeIconUrl?: string;
+  position?: { x: number; y: number } | 'default';
 }
 
 export interface FlowGraphEdge {
