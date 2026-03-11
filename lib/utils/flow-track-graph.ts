@@ -8,16 +8,21 @@ import type {
 } from '@/lib/types/tracking';
 
 export type EdgeTransactionItem = { amount: number; amountRaw: string; txHash: string; timestamp?: string };
+export type SoftDeleteTransactionItem = { flowId: string; transactionId: string };
+
 export type FlowGraphEdgeWithTimestamp = FlowGraphEdge & {
     timestamp?: string;
     flowIndex?: number;
     chainIconUrl?: string;
     transactions?: EdgeTransactionItem[];
+    softDeleteItems?: SoftDeleteTransactionItem[];
 };
 export type FlowGraphWithTimestamps = {
     nodes: FlowGraphNode[];
     edges: FlowGraphEdgeWithTimestamp[];
     returnSourceNodeIds?: string[];
+    walletIdsByNodeId?: Record<string, string[]>;
+    softDeleteItemsByNodeId?: Record<string, SoftDeleteTransactionItem[]>;
 };
 
 function normalizeNode(n: { id?: string; label?: string; address?: string }, i: number): FlowGraphNode {

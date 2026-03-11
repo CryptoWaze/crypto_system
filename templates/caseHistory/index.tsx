@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { getCaseById } from '@/lib/services/cases/get-case-by-id.service';
+import { editCase } from '@/lib/services/cases/edit-case.service';
 import { caseByIdResponseToFlowGraph } from '@/lib/utils/case-api-to-flow-graph';
 import { FlowGraphView } from '@/components/flow/FlowGraphView';
 import { AppHeader } from '@/components/common/appHeader';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/lib/toast-context';
 import type { FlowGraphWithTimestamps } from '@/lib/utils/flow-track-graph';
+import type { EditCaseWalletPayload } from '@/lib/services/cases/edit-case.service';
+import type { SoftDeleteTransactionItem } from '@/lib/utils/flow-track-graph';
 
 export function CaseHistoryTemplate() {
     const params = useParams();
@@ -23,7 +27,9 @@ export function CaseHistoryTemplate() {
     const [endpointExchangeName, setEndpointExchangeName] = useState<string | null>(null);
     const [endpointHotWalletLabel, setEndpointHotWalletLabel] = useState<string | null>(null);
     const [meusCasosOpen, setMeusCasosOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
     const accessToken = session?.user?.accessToken;
+    const toast = useToast();
 
     useEffect(() => {
         if (status === 'unauthenticated') router.replace('/login');
@@ -63,7 +69,34 @@ export function CaseHistoryTemplate() {
         return () => {
             cancelled = true;
         };
-    }, [id, status, accessToken, router]);
+    }, [id, status, accessToken, router, refreshKey]);
+
+    const handleEditWallets = useCallback(
+        async (wallets: EditCaseWalletPayload[]) => {
+            if (!id || !accessToken || wallets.length === 0) return;
+            const result = await editCase(id, { wallets }, accessToken);
+            if (result.ok) {
+                toast.success('Alterações salvas.');
+            } else {
+                toast.error(result.message ?? 'Erro ao salvar alterações.');
+            }
+        },
+        [id, accessToken, toast],
+    );
+
+    const handleSoftDeleteTransactions = useCallback(
+        async (items: SoftDeleteTransactionItem[]) => {
+            if (!id || !accessToken || items.length === 0) return;
+            const result = await editCase(id, { softDeleteTransactions: items }, accessToken);
+            if (result.ok) {
+                setRefreshKey((k) => k + 1);
+                toast.success('Nó excluído do fluxo.');
+            } else {
+                toast.error(result.message ?? 'Erro ao excluir nó.');
+            }
+        },
+        [id, accessToken, toast],
+    );
 
     if (status === 'loading') {
         return (
@@ -101,7 +134,7 @@ export function CaseHistoryTemplate() {
         );
     }
 
-    if (!graphData) return null;
+    if (!graphData || !id || !accessToken) return null;
 
     return (
         <div className="min-h-screen w-full overflow-auto bg-background">
@@ -115,6 +148,8 @@ export function CaseHistoryTemplate() {
                     endpointExchangeName={endpointExchangeName}
                     endpointHotWalletLabel={endpointHotWalletLabel}
                     caseId={id}
+                    onEditWallets={handleEditWallets}
+                    onSoftDeleteTransactions={handleSoftDeleteTransactions}
                 />
             </main>
         </div>

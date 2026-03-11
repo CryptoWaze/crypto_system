@@ -250,13 +250,13 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
                             <table className="w-full text-xs border-collapse">
                                 <thead className="sticky top-0 bg-muted/30 z-10">
                                     <tr className="border-b border-border">
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Counterparty</th>
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">
+                                        <th className="px-3 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">Counterparty</th>
+                                        <th className="px-3 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">
                                             Direction
                                             <Info className="ml-0.5 inline h-3 w-3" />
                                         </th>
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Token</th>
-                                        <th className="px-2 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Transfer</th>
+                                        <th className="px-3 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">Token</th>
+                                        <th className="px-3 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">Transfer</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -265,7 +265,7 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
                                             key={`${chain}-${transfer.txHash}-${i}`}
                                             className="border-b border-border/50 last:border-0 hover:bg-muted/20"
                                         >
-                                            <td className="px-2 py-2 whitespace-nowrap">
+                                            <td className="px-3 py-3 whitespace-nowrap">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-1">
@@ -284,13 +284,13 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-2 py-2 whitespace-nowrap">
+                                            <td className="px-3 py-3 whitespace-nowrap">
                                                 <span className={transfer.direction === 'IN' ? 'text-green-500' : 'text-red-500'}>
                                                     {transfer.direction}
                                                 </span>
                                             </td>
-                                            <td className="px-2 py-2 text-muted-foreground whitespace-nowrap">{transfer.symbol || '—'}</td>
-                                            <td className="px-2 py-2 whitespace-nowrap">
+                                            <td className="px-3 py-3 text-muted-foreground whitespace-nowrap">{transfer.symbol || '—'}</td>
+                                            <td className="px-3 py-3 whitespace-nowrap">
                                                 <span className="text-muted-foreground">{formatTransferAmount(transfer.amount)}</span>
                                                 <span className="ml-1 text-muted-foreground/70">{chainLabel(chain)}</span>
                                                 <ChevronRight className="ml-0.5 inline h-3 w-3" />

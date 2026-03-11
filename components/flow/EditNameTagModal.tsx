@@ -86,23 +86,23 @@ export function EditNameTagModal({
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="name-tag" className="text-sm font-medium text-foreground">
-                            Name Tag
-                        </Label>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                id="name-tag"
-                                value={nameTag}
-                                onChange={(e) => setNameTag(e.target.value.slice(0, MAX_NAME_TAG_LENGTH))}
-                                placeholder={placeholder}
-                                maxLength={MAX_NAME_TAG_LENGTH}
-                                className={cn('h-10 flex-1 rounded-[6px]', isOverLimit && 'border-destructive aria-invalid')}
-                                aria-invalid={isOverLimit}
-                            />
-                            <span className={cn('shrink-0 text-xs tabular-nums', isOverLimit ? 'text-destructive' : 'text-muted-foreground')}>
+                        <div className="flex items-center justify-between gap-2">
+                            <Label htmlFor="name-tag" className="text-sm font-medium text-foreground">
+                                Name Tag
+                            </Label>
+                            <span className={cn('text-xs tabular-nums', isOverLimit ? 'text-destructive' : 'text-muted-foreground')}>
                                 {length} / {MAX_NAME_TAG_LENGTH}
                             </span>
                         </div>
+                        <Input
+                            id="name-tag"
+                            value={nameTag}
+                            onChange={(e) => setNameTag(e.target.value.slice(0, MAX_NAME_TAG_LENGTH))}
+                            placeholder={placeholder}
+                            maxLength={MAX_NAME_TAG_LENGTH}
+                            className={cn('h-10 w-full rounded-[6px]', isOverLimit && 'border-destructive aria-invalid')}
+                            aria-invalid={isOverLimit}
+                        />
                     </div>
                 </div>
                 <DialogFooter className="mt-4 flex flex-col-reverse gap-3 sm:mt-3 sm:flex-row sm:justify-end sm:gap-2">

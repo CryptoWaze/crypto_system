@@ -1,6 +1,6 @@
 import type { FlowGraphNode } from '@/lib/types/tracking';
 import type { CaseByIdApiResponse } from '@/lib/types/case-api';
-import type { EdgeTransactionItem, FlowGraphEdgeWithTimestamp, FlowGraphWithTimestamps } from './flow-track-graph';
+import type { EdgeTransactionItem, FlowGraphEdgeWithTimestamp, FlowGraphWithTimestamps, SoftDeleteTransactionItem } from './flow-track-graph';
 
 function trimSymbol(s: string | undefined | null): string {
     return (s ?? '').trim() || '—';
@@ -81,6 +81,7 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
     }
 
     const titleByNodeId = new Map<string, string>();
+    const positionByNodeId = new Map<string, { x: number; y: number }>();
     for (const flow of flows) {
         if (flow.endpointAddress) {
             labelByNodeId.set(flow.endpointAddress, flow.endpointAddress);
@@ -93,6 +94,29 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
                 }
             }
         }
+        const wallets = flow.wallets ?? [];
+        for (const w of wallets) {
+            const address = w.address;
+            if (!address) continue;
+            const nicknameOrLabel = (w.nickname ?? w.displayLabel ?? '').trim();
+            if (nicknameOrLabel !== '') {
+                labelByNodeId.set(address, nicknameOrLabel);
+            }
+            const pos = w.position;
+            if (pos != null && typeof pos === 'object' && typeof pos.x === 'number' && typeof pos.y === 'number' && !positionByNodeId.has(address)) {
+                positionByNodeId.set(address, { x: pos.x, y: pos.y });
+            }
+        }
+    }
+
+    const walletIdsByNodeId: Record<string, string[]> = {};
+    for (const flow of flows) {
+        for (const w of flow.wallets ?? []) {
+            if (w.address && w.id && !String(w.id).startsWith('_virtual_')) {
+                if (!walletIdsByNodeId[w.address]) walletIdsByNodeId[w.address] = [];
+                walletIdsByNodeId[w.address].push(w.id);
+            }
+        }
     }
 
     const nodes: FlowGraphNode[] = Array.from(nodeIds).map((id) => {
@@ -100,11 +124,13 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
         const title = titleByNodeId.get(id);
         const chainIconUrl = chainIconUrlByNodeId.get(id);
         const endpointExchangeIconUrl = endpointExchangeIconUrlByNodeId.get(id);
-        const base = { id, label };
-        if (title != null) Object.assign(base, { title });
-        if (chainIconUrl) Object.assign(base, { chainIconUrl });
-        if (endpointExchangeIconUrl) Object.assign(base, { endpointExchangeIconUrl });
-        return base as FlowGraphNode;
+        const pos = positionByNodeId.get(id);
+        const base: FlowGraphNode = { id, label };
+        if (title != null) base.title = title;
+        if (chainIconUrl) base.chainIconUrl = chainIconUrl;
+        if (endpointExchangeIconUrl) base.endpointExchangeIconUrl = endpointExchangeIconUrl;
+        if (pos) base.position = pos;
+        return base;
     });
 
     const edges: FlowGraphEdgeWithTimestamp[] = [];
@@ -128,6 +154,7 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
         flowIndex: number;
         chainIconUrl?: string;
         transactions: EdgeTransactionItem[];
+        softDeleteItems: SoftDeleteTransactionItem[];
     };
     const consolidatedByKey = new Map<string, ConsolidatedEdge>();
 
@@ -196,9 +223,15 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
                 txHash,
                 ...(txTimestamp ? { timestamp: txTimestamp } : {}),
             };
+            const transactionId = (tx && 'id' in tx && typeof tx.id === 'string' ? tx.id : null) ?? e.id;
+            const flowId =
+                (tx && 'flowId' in tx && typeof (tx as { flowId?: string }).flowId === 'string' ? (tx as { flowId: string }).flowId : null) ??
+                flow.id;
+            const softItem: SoftDeleteTransactionItem = { flowId, transactionId };
             if (existing) {
                 existing.amount += amountNum;
                 existing.transactions.push(item);
+                existing.softDeleteItems.push(softItem);
                 if (txTimestamp && (!existing.timestamp || txTimestamp > existing.timestamp)) {
                     existing.timestamp = txTimestamp;
                     existing.txHash = txHash;
@@ -219,6 +252,7 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
                     timestamp: txTimestamp || undefined,
                     flowIndex: f,
                     transactions: [item],
+                    softDeleteItems: [softItem],
                     ...(flow.chainIconUrl ? { chainIconUrl: flow.chainIconUrl } : {}),
                 });
             }
@@ -245,8 +279,19 @@ export function caseByIdResponseToFlowGraph(data: CaseByIdApiResponse): FlowGrap
             ...(c.chainIconUrl ? { chainIconUrl: c.chainIconUrl } : {}),
         };
         if (c.transactions.length > 0) edgePayload.transactions = c.transactions;
+        if (c.softDeleteItems.length > 0) edgePayload.softDeleteItems = c.softDeleteItems;
         edges.push(edgePayload);
     }
 
-    return { nodes, edges, returnSourceNodeIds: Array.from(returnSourceNodeIds) };
+    const softDeleteItemsByNodeId: Record<string, SoftDeleteTransactionItem[]> = {};
+    for (const edge of edges) {
+        const items = edge.softDeleteItems ?? [];
+        if (items.length === 0) continue;
+        for (const nodeId of [edge.from, edge.to]) {
+            if (!softDeleteItemsByNodeId[nodeId]) softDeleteItemsByNodeId[nodeId] = [];
+            softDeleteItemsByNodeId[nodeId].push(...items);
+        }
+    }
+
+    return { nodes, edges, returnSourceNodeIds: Array.from(returnSourceNodeIds), walletIdsByNodeId, softDeleteItemsByNodeId };
 }
