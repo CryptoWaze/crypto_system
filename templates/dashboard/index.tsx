@@ -47,7 +47,7 @@ export function DashboardTemplate() {
                     <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                         <Button
                             size="lg"
-                            className="rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_24px_-4px_var(--glow-blue)]"
+                            className="rounded-[6px] bg-primary text-white hover:bg-primary/90 shadow-[0_0_24px_-4px_var(--glow-blue)]"
                             asChild
                         >
                             <Link href="/dashboard/rastreio/novo">Iniciar rastreio</Link>

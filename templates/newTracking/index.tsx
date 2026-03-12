@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import type { FlowToExchangeSuccess, FlowToExchangeFailure } from '@/lib/types/tracking';
-import { createCase } from '@/lib/services/cases/create-case.service';
+import { createCase, type CreateCaseMode } from '@/lib/services/cases/create-case.service';
 import { connectSocket } from '@/lib/services/socket/socket.service';
 import { AppHeader } from '@/components/common/appHeader';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ export function NewTrackingTemplate() {
     const accessToken = session?.user?.accessToken;
     const [meusCasosOpen, setMeusCasosOpen] = useState(false);
     const [caseName, setCaseName] = useState('');
+    const [mode, setMode] = useState<CreateCaseMode>('basic');
     const [rows, setRows] = useState<HashValueRow[]>(() => [initialRow()]);
     const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
     const [isTracking, setIsTracking] = useState(false);
@@ -122,7 +123,7 @@ export function NewTrackingTemplate() {
         setIsTracking(true);
 
         (async () => {
-            const result = await createCase({ name, seeds }, accessToken);
+            const result = await createCase({ name, mode, seeds }, accessToken);
 
             if (!result.ok) {
                 setIsTracking(false);
@@ -199,6 +200,8 @@ export function NewTrackingTemplate() {
                     <Step1DadosDoCaso
                         caseName={caseName}
                         setCaseName={setCaseName}
+                        mode={mode}
+                        setMode={setMode}
                         rows={rows}
                         caseNameError={caseNameError}
                         setCaseNameError={setCaseNameError}
@@ -240,7 +243,7 @@ export function NewTrackingTemplate() {
                         <Button
                             type="submit"
                             form="rastreio-novo-form"
-                            className="h-10 w-full rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+                            className="h-10 w-full rounded-[6px] bg-primary text-white hover:bg-primary/90 sm:w-auto"
                         >
                             Iniciar rastreamento
                         </Button>

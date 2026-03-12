@@ -7,12 +7,12 @@ import { useSession, signOut } from 'next-auth/react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { FolderOpen, ChevronDown, LogOut } from 'lucide-react';
 import { ModalCases } from '@/components/common/modalCases';
@@ -40,17 +40,20 @@ export function AppHeader({ meusCasosOpen: meusCasosOpenProp, onMeusCasosOpenCha
 
     return (
         <>
-            <header className="fixed inset-x-0 top-0 z-10 flex h-14 w-full items-center justify-between border-b border-border bg-[#303135]/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-[#303135]/90 sm:px-6" style={{ boxShadow: '0 1px 0 0 rgba(91, 141, 239, 0.06)' }}>
+            <header
+                className="fixed inset-x-0 top-0 z-10 flex h-14 w-full items-center justify-between border-b border-border bg-[#303135]/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-[#303135]/90 sm:px-6"
+                style={{ boxShadow: '0 1px 0 0 rgba(91, 141, 239, 0.06)' }}
+            >
                 <Link href="/dashboard" className="flex shrink-0 items-center" aria-label="CryptoForense - início">
                     <img src="/logo.png" alt="CryptoForense" className="h-8 w-auto sm:h-9" width={140} height={36} />
                 </Link>
 
                 <nav className="flex items-center gap-1 sm:gap-2" aria-label="Navegação principal">
-                    <Link href="/dashboard/flowtrack">
+                    {/* <Link href="/dashboard/flowtrack">
                         <Button variant="ghost" size="sm" className="h-10 rounded-[6px] px-3 text-foreground hover:bg-muted sm:px-4">
                             FlowTrack
                         </Button>
-                    </Link>
+                    </Link> */}
                     <Link href="/dashboard/rastreio/novo">
                         <Button variant="ghost" size="sm" className="h-10 rounded-[6px] px-3 text-foreground hover:bg-muted sm:px-4">
                             AutoTrack
@@ -78,10 +81,7 @@ export function AppHeader({ meusCasosOpen: meusCasosOpenProp, onMeusCasosOpenCha
                                 <FolderOpen className="size-4 shrink-0" aria-hidden />
                                 Meus casos
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => setConfirmOpen(true)}
-                            >
+                            <DropdownMenuItem variant="destructive" onClick={() => setConfirmOpen(true)}>
                                 <LogOut className="size-4 shrink-0" aria-hidden />
                                 Sair
                             </DropdownMenuItem>
@@ -104,12 +104,7 @@ export function AppHeader({ meusCasosOpen: meusCasosOpenProp, onMeusCasosOpenCha
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-4 flex flex-col-reverse gap-3 sm:mt-3 sm:flex-row sm:justify-end sm:gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setConfirmOpen(false)}
-                            className="h-10 w-full rounded-[6px] sm:w-auto"
-                        >
+                        <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)} className="h-10 w-full rounded-[6px] sm:w-auto">
                             Cancelar
                         </Button>
                         <Button
