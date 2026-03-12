@@ -31,6 +31,27 @@ export function flowGraphToReactFlow(
     positionMap = enforceFlowDirection(positionMap, graph);
     const outEdgesBySource = getOutEdges(graph);
     const returnSourceIds = new Set((graph as FlowGraphWithTimestamps).returnSourceNodeIds ?? []);
+    const endpointNodeIds = new Set(graph.nodes.filter((n) => n.endpointExchangeIconUrl).map((n) => n.id));
+    const inEdges = new Map<string, string[]>();
+    for (const e of graph.edges) {
+        const list = inEdges.get(e.to) ?? [];
+        list.push(e.from);
+        inEdges.set(e.to, list);
+    }
+    const onPathToHotWallet = new Set<string>();
+    const queue = [...endpointNodeIds];
+    for (const id of queue) onPathToHotWallet.add(id);
+    let qIndex = 0;
+    while (qIndex < queue.length) {
+        const cur = queue[qIndex++];
+        const predecessors = inEdges.get(cur) ?? [];
+        for (const p of predecessors) {
+            if (!onPathToHotWallet.has(p)) {
+                onPathToHotWallet.add(p);
+                queue.push(p);
+            }
+        }
+    }
     const nodes: Node[] = order.map((id, i) => {
         const n = nodeMap.get(id);
         const isSeedNode = seedNodeIds.has(id);
@@ -47,6 +68,7 @@ export function flowGraphToReactFlow(
         const connectedIds = outEdgesBySource[id] ?? [];
         const connectedCount = connectedIds.length;
         const hasIncoming = (inDegree[id] ?? 0) > 0;
+        const isOnPathToHotWallet = onPathToHotWallet.has(id);
         return {
             id,
             type: 'flowTrackNode',
@@ -60,6 +82,7 @@ export function flowGraphToReactFlow(
                 connectedCount,
                 connectedIds,
                 isSeedNode,
+                isOnPathToHotWallet,
                 ...(n?.chainIconUrl ? { chainIconUrl: n.chainIconUrl } : {}),
                 ...(n?.endpointExchangeIconUrl ? { endpointExchangeIconUrl: n.endpointExchangeIconUrl } : {}),
             },

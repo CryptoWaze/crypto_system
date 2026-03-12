@@ -191,7 +191,7 @@ export function FlowGraphViewInteractive({
                                 <button
                                     type="button"
                                     onClick={() => setEdgeStyleDropdownOpen((o) => !o)}
-                                    className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/6 bg-[#25262a] px-3 py-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.35)] transition-all duration-200 hover:border-white/10 hover:bg-[#2d2e33]"
+                                    className="flex cursor-pointer items-center gap-3 rounded-[6px] border border-white/6 bg-[#25262a] px-3 py-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.35)] transition-all duration-200 hover:border-white/10 hover:bg-[#2d2e33]"
                                     style={{ minWidth: 140 }}
                                 >
                                     <span className="flex-1 text-left text-sm font-semibold text-white">
@@ -204,7 +204,7 @@ export function FlowGraphViewInteractive({
                                     />
                                 </button>
                                 {edgeStyleDropdownOpen && (
-                                    <div className="absolute right-0 top-full z-50 mt-2 flex flex-col overflow-hidden rounded-xl border border-white/6 bg-[#25262a] shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+                                    <div className="absolute right-0 top-full z-50 mt-2 flex flex-col overflow-hidden rounded-[6px] border border-white/6 bg-[#25262a] shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
                                         {edgeStyleOptions.map((opt, index) => (
                                             <button
                                                 key={opt.value}
@@ -213,7 +213,7 @@ export function FlowGraphViewInteractive({
                                                     setEdgeStyle(opt.value);
                                                     setEdgeStyleDropdownOpen(false);
                                                 }}
-                                                className={`flex items-center cursor-pointer gap-2.5 px-3 py-2.5 text-left text-sm transition-colors hover:bg-white/6 ${index === 0 ? 'rounded-t-xl' : ''} ${index === edgeStyleOptions.length - 1 ? 'rounded-b-xl' : ''}`}
+                                                className={`flex items-center cursor-pointer gap-2.5 px-3 py-2.5 text-left text-sm transition-colors hover:bg-white/6 ${index === 0 ? 'rounded-t-[6px]' : ''} ${index === edgeStyleOptions.length - 1 ? 'rounded-b-[6px]' : ''}`}
                                                 style={{
                                                     backgroundColor: edgeStyle === opt.value ? 'rgba(91,141,239,0.18)' : 'transparent',
                                                     color: edgeStyle === opt.value ? '#a5c0fa' : '#d1d5db',
