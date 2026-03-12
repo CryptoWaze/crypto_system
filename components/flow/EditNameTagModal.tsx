@@ -17,10 +17,26 @@ function BinanceLogoIcon({ size = 24, className }: { size?: number; className?: 
     );
 }
 
+function ChainIconImg({ src, size = 24, className }: { src: string; size?: number; className?: string }) {
+    if (!src || typeof src !== 'string') return null;
+    return (
+        <img
+            src={src}
+            alt=""
+            width={size}
+            height={size}
+            className={cn('shrink-0 rounded-full object-contain', className)}
+            style={{ width: size, height: size }}
+            referrerPolicy="no-referrer"
+        />
+    );
+}
+
 export type EditNameTagModalProps = {
     open: boolean;
     onClose: () => void;
     chain?: string;
+    chainIconUrl?: string | null;
     chainIcon?: React.ReactNode;
     address: string;
     currentNameTag?: string;
@@ -33,6 +49,7 @@ export function EditNameTagModal({
     open,
     onClose,
     chain = 'BSC',
+    chainIconUrl,
     chainIcon,
     address,
     currentNameTag = '',
@@ -76,8 +93,8 @@ export function EditNameTagModal({
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-muted-foreground">Chain</span>
                             <span className="flex items-center gap-1.5 font-medium text-foreground">
-                                {chainIcon ?? <BinanceLogoIcon size={16} />}
                                 {chain}
+                                {chainIcon ?? (chainIconUrl ? <ChainIconImg src={chainIconUrl} size={16} /> : <BinanceLogoIcon size={16} />)}
                             </span>
                         </div>
                         <div className="space-y-1">

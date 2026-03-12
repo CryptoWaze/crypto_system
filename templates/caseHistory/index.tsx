@@ -9,7 +9,7 @@ import { caseByIdResponseToFlowGraph } from '@/lib/utils/case-api-to-flow-graph'
 import { FlowGraphView } from '@/components/flow/FlowGraphView';
 import { AppHeader } from '@/components/common/appHeader';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileX2 } from 'lucide-react';
 import { useToast } from '@/lib/toast-context';
 import type { FlowGraphWithTimestamps } from '@/lib/utils/flow-track-graph';
 import type { EditCaseWalletPayload } from '@/lib/services/cases/edit-case.service';
@@ -119,16 +119,38 @@ export function CaseHistoryTemplate() {
 
     if (error) {
         return (
-            <div className="min-h-screen w-full overflow-auto bg-background">
+            <div className="flex min-h-screen w-full flex-col overflow-auto bg-background">
                 <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
                 <div className="h-14 shrink-0" aria-hidden />
-                <main className="flex flex-col items-center justify-center px-4 py-16">
-                    <p className="text-sm text-destructive" role="alert">
-                        {error}
-                    </p>
-                    <Button variant="outline" className="mt-4 rounded-[6px]" onClick={() => router.replace('/dashboard/flowtrack')}>
-                        Voltar ao FlowTrack
-                    </Button>
+                <main className="flex flex-1 flex-col items-center justify-center px-4 py-8">
+                    <div
+                        className="flex w-full max-w-md flex-col items-center rounded-2xl border border-border bg-card px-8 py-10 text-center shadow-lg"
+                        role="alert"
+                    >
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                            <FileX2 size={28} strokeWidth={1.5} aria-hidden />
+                        </div>
+                        <h1 className="mt-5 text-lg font-semibold text-foreground">
+                            {error?.includes('sem dados') ? 'Caso sem dados' : 'Caso não encontrado'}
+                        </h1>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                            {id ? (
+                                error?.includes('sem dados') ? (
+                                    <>O caso com o ID {id} não possui dados de grafo para exibir. Tente outro caso ou volte mais tarde.</>
+                                ) : (
+                                    <>
+                                        Não foi possível encontrar um caso com o ID {id}. O caso pode não existir ou você não tem permissão para
+                                        acessá-lo.
+                                    </>
+                                )
+                            ) : (
+                                'O endereço do caso é inválido. Volte à lista de casos e tente novamente.'
+                            )}
+                        </p>
+                        <Button variant="default" className="mt-8 h-10 rounded-[6px] px-6" onClick={() => router.replace('/dashboard/rastreio/novo')}>
+                            Voltar ao AutoTrack
+                        </Button>
+                    </div>
                 </main>
             </div>
         );
