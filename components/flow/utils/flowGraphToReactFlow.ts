@@ -70,29 +70,6 @@ export function flowGraphToReactFlow(
         };
     });
 
-    const edgesFromSource = new Map<string, { flowIndex: number; edgeIndex: number; targetId: string }[]>();
-    graph.edges.forEach((e, i) => {
-        const withTs = e as FlowGraphEdgeWithTimestamp;
-        const flowIdx = withTs.flowIndex ?? i;
-        const list = edgesFromSource.get(e.from) ?? [];
-        list.push({ flowIndex: flowIdx, edgeIndex: i, targetId: e.to });
-        edgesFromSource.set(e.from, list);
-    });
-    for (const list of edgesFromSource.values()) {
-        list.sort((a, b) => {
-            const yA = positionMap.get(a.targetId)?.y ?? 0;
-            const yB = positionMap.get(b.targetId)?.y ?? 0;
-            if (yA !== yB) return yA - yB;
-            return a.flowIndex - b.flowIndex;
-        });
-    }
-    const sourceHandleByEdgeIndex = new Map<number, string>();
-    for (const list of edgesFromSource.values()) {
-        list.forEach((item, slot) => {
-            sourceHandleByEdgeIndex.set(item.edgeIndex, `source-${slot}`);
-        });
-    }
-
     const flowPositionCounter = new Map<number, number>();
     const edges: Edge[] = graph.edges.map((e, i) => {
         const withTs = e as FlowGraphEdgeWithTimestamp;
@@ -108,14 +85,13 @@ export function flowGraphToReactFlow(
         const stepInFlow = (flowPositionCounter.get(flowIdx) ?? 0) + 1;
         flowPositionCounter.set(flowIdx, stepInFlow);
         const flowColor = FLOW_COLORS[flowIdx % FLOW_COLORS.length];
-        const sourceHandle = sourceHandleByEdgeIndex.get(i);
         const edgeChainIcon = (withTs as { chainIconUrl?: string }).chainIconUrl;
         const edgeTransactions = withTs.transactions;
         return {
             id: `e-${e.from}-${e.to}-${i}`,
             source: e.from,
             target: e.to,
-            sourceHandle,
+            sourceHandle: 'source',
             type: 'flowTrackBezier',
             data: {
                 symbol: e.symbol,

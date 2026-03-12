@@ -115,22 +115,20 @@ function FlowTrackNodeComponent({ id, data, sourcePosition, targetPosition, drag
                     </div>
                 )}
             </div>
-            {hasOutgoing &&
-                Array.from({ length: connectedCount }, (_, i) => (
-                    <Handle
-                        key={`source-${i}`}
-                        id={`source-${i}`}
-                        type="source"
-                        position={sourcePosition ?? Position.Right}
-                        style={{
-                            ...INVISIBLE_HANDLE_STYLE,
-                            top: connectedCount > 1 ? `${((i + 1) / (connectedCount + 1)) * 100}%` : '50%',
-                            left: 'auto',
-                            right: 0,
-                            transform: 'translateY(-50%)',
-                        }}
-                    />
-                ))}
+            {hasOutgoing && (
+                <Handle
+                    id="source"
+                    type="source"
+                    position={sourcePosition ?? Position.Right}
+                    style={{
+                        ...INVISIBLE_HANDLE_STYLE,
+                        top: '50%',
+                        left: 'auto',
+                        right: 0,
+                        transform: 'translateY(-50%)',
+                    }}
+                />
+            )}
         </div>
     );
 }

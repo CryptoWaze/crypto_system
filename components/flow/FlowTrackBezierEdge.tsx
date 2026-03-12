@@ -1,8 +1,10 @@
 'use client';
 
-import { getBezierPath, Position, type EdgeProps } from '@xyflow/react';
+import { getBezierPath, getStraightPath, getSmoothStepPath, Position, type EdgeProps } from '@xyflow/react';
 import { memo, useMemo } from 'react';
 import { LABEL_WIDTH, LABEL_HEIGHT } from './constants';
+
+export type EdgeLineStyle = 'bezier' | 'straight' | 'smoothstep' | 'step';
 
 function FlowTrackBezierEdgeComponent({
     id,
@@ -18,18 +20,47 @@ function FlowTrackBezierEdgeComponent({
     markerStart,
     selected,
 }: EdgeProps) {
-    const [path, labelX, labelY] = useMemo(
-        () =>
-            getBezierPath({
+    const lineStyle = (data?.edgeStyle as EdgeLineStyle) ?? 'bezier';
+    const [path, labelX, labelY] = useMemo(() => {
+        const srcPos = sourcePosition ?? Position.Right;
+        const tgtPos = targetPosition ?? Position.Left;
+        if (lineStyle === 'straight') {
+            const [p, lx, ly] = getStraightPath({ sourceX, sourceY, targetX, targetY });
+            return [p, lx, ly] as const;
+        }
+        if (lineStyle === 'step') {
+            const [p, lx, ly] = getSmoothStepPath({
                 sourceX,
                 sourceY,
                 targetX,
                 targetY,
-                sourcePosition: sourcePosition ?? Position.Right,
-                targetPosition: targetPosition ?? Position.Left,
-            }),
-        [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition],
-    );
+                sourcePosition: srcPos,
+                targetPosition: tgtPos,
+                borderRadius: 0,
+            });
+            return [p, lx, ly] as const;
+        }
+        if (lineStyle === 'smoothstep') {
+            const [p, lx, ly] = getSmoothStepPath({
+                sourceX,
+                sourceY,
+                targetX,
+                targetY,
+                sourcePosition: srcPos,
+                targetPosition: tgtPos,
+            });
+            return [p, lx, ly] as const;
+        }
+        const [p, lx, ly] = getBezierPath({
+            sourceX,
+            sourceY,
+            targetX,
+            targetY,
+            sourcePosition: srcPos,
+            targetPosition: tgtPos,
+        });
+        return [p, lx, ly] as const;
+    }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, lineStyle]);
     const dateStr = (data?.dateStr as string) ?? '';
     const valueStr = (data?.valueStr as string) ?? '';
     const stepInFlow = (data?.stepInFlow as number) ?? 1;

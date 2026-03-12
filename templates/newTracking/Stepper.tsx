@@ -35,18 +35,18 @@ export function Stepper({ currentStep }: { currentStep: number }) {
                                     >
                                         {showCheck ? (
                                             <CheckCircle2
-                                                className="size-5 shrink-0 text-primary-foreground animate-in fade-in zoom-in duration-300 fill-mode-both"
+                                                className="size-5 shrink-0 text-white animate-in fade-in zoom-in duration-300 fill-mode-both"
                                                 aria-hidden
                                             />
                                         ) : showLoading ? (
-                                            <Loader2 className="size-5 shrink-0 animate-spin text-primary-foreground" aria-hidden />
+                                            <Loader2 className="size-5 shrink-0 animate-spin text-white" aria-hidden />
                                         ) : (
-                                            <span className="transition-opacity duration-300">{step}</span>
+                                            <span className="transition-opacity duration-300 text-white">{step}</span>
                                         )}
                                     </span>
                                     <span
                                         className={cn(
-                                            'mt-1.5 text-center text-xs font-medium transition-colors duration-300 sm:text-sm',
+                                            'mt-1.5 ml-[5px] text-center text-xs font-medium transition-colors duration-300 sm:text-sm',
                                             isHighlighted && 'text-foreground',
                                             !isHighlighted && 'text-muted-foreground',
                                         )}

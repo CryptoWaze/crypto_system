@@ -9,6 +9,7 @@ import { CircleHelp, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { HashValueRow } from '../types';
 import { maskNumericValue } from '../utils';
+import type { CreateCaseMode } from '@/lib/services/cases/create-case.service';
 
 function FieldLabelWithTooltip({ id, label, tooltip }: { id?: string; label: string; tooltip: string }) {
     return (
@@ -37,6 +38,8 @@ function FieldLabelWithTooltip({ id, label, tooltip }: { id?: string; label: str
 type Step1DadosDoCasoProps = {
     caseName: string;
     setCaseName: (v: string) => void;
+    mode: CreateCaseMode;
+    setMode: (v: CreateCaseMode) => void;
     rows: HashValueRow[];
     caseNameError: string | null;
     setCaseNameError: (v: string | null) => void;
@@ -51,6 +54,8 @@ type Step1DadosDoCasoProps = {
 export function Step1DadosDoCaso({
     caseName,
     setCaseName,
+    mode,
+    setMode,
     rows,
     caseNameError,
     setCaseNameError,
@@ -101,6 +106,32 @@ export function Step1DadosDoCaso({
                             {caseNameError}
                         </p>
                     )}
+                    <div className="space-y-2 pt-4">
+                        <FieldLabelWithTooltip
+                            label="Modo de rastreamento"
+                            tooltip="Escolha o modo de rastreamento: Básico para uma análise mais rápida ou Avançado para uma investigação mais detalhada."
+                        />
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant={mode === 'basic' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setMode('basic')}
+                                className="min-w-26 rounded-[6px] border"
+                            >
+                                Básico
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={mode === 'advanced' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setMode('advanced')}
+                                className="min-w-26 rounded-[6px] border"
+                            >
+                                Avançado
+                            </Button>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="space-y-2">

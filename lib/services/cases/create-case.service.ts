@@ -5,8 +5,11 @@ export type CreateCaseSeed = {
   reportedLossAmount: number;
 };
 
+export type CreateCaseMode = 'basic' | 'advanced';
+
 export type CreateCasePayload = {
   name: string;
+  mode?: CreateCaseMode;
   seeds: CreateCaseSeed[];
 };
 
@@ -35,6 +38,7 @@ export async function createCase(
       },
       body: JSON.stringify({
         name: payload.name.trim(),
+        mode: payload.mode ?? 'basic',
         seeds: payload.seeds.map((s) => ({
           txHash: s.txHash.trim(),
           reportedLossAmount: Number(s.reportedLossAmount),
