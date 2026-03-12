@@ -347,7 +347,7 @@
 .flow-track-graph .react-flow__controls {
     background: #25262a !important;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.5rem;
+    border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 .flow-track-graph .react-flow__controls button {

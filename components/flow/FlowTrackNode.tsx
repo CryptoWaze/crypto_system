@@ -1,8 +1,9 @@
 'use client';
 
-import { useContext, useState, memo, useMemo, type CSSProperties } from 'react';
+import { useCallback, useContext, useState, memo, useMemo, type CSSProperties } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Copy } from 'lucide-react';
+import { useToast } from '@/lib/toast-context';
 import { FlowGraphEditContext } from './FlowGraphEditContext';
 import { ChainIcon, BinanceLogoIcon } from './FlowIcons';
 
@@ -17,7 +18,20 @@ const INVISIBLE_HANDLE_STYLE = {
 
 function FlowTrackNodeComponent({ id, data, sourcePosition, targetPosition, dragging, selected }: NodeProps) {
     const [hovered, setHovered] = useState(false);
+    const toast = useToast();
     const editContext = useContext(FlowGraphEditContext);
+    const fullAddress = (data?.fullAddress as string) ?? id;
+
+    const handleCopy = useCallback(
+        (e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            navigator.clipboard.writeText(fullAddress).then(() => {
+                toast.success('Endereço copiado com sucesso.');
+            });
+        },
+        [fullAddress, toast],
+    );
     const label = (data?.label as string) ?? '';
     const title = data?.title as string | undefined;
     const endpointExchangeIconUrl = data?.endpointExchangeIconUrl as string | undefined;
@@ -28,7 +42,16 @@ function FlowTrackNodeComponent({ id, data, sourcePosition, targetPosition, drag
     const connectedCount = Math.max(1, (data?.connectedCount as number) ?? 1);
     const showHighlight = hovered || dragging || selected;
     const hasTitleLayout = Boolean(title);
-    const showActions = hovered && !(data?.isSeedNode === true);
+    const isDepositAddress = typeof title === 'string' && title.includes('Deposit Address');
+    const isHotWallet = Boolean(endpointExchangeIconUrl);
+    const isOnPathToHotWallet = data?.isOnPathToHotWallet === true;
+    const showEdit =
+        hovered &&
+        !(data?.isSeedNode === true) &&
+        !isDepositAddress &&
+        !isHotWallet;
+    const showDelete = hovered && !isOnPathToHotWallet;
+    const showActions = showEdit || showDelete;
 
     const nodeContentStyle = useMemo(
         (): CSSProperties => ({
@@ -73,6 +96,16 @@ function FlowTrackNodeComponent({ id, data, sourcePosition, targetPosition, drag
                             <span className="font-sans font-bold text-xs text-white whitespace-nowrap truncate">{title}</span>
                             <span className="font-mono leading-tight break-all" style={{ fontSize: 9, color: '#6B7280' }}>
                                 {label}
+                                <button
+                                    type="button"
+                                    className="inline-flex cursor-pointer shrink-0 align-middle rounded p-0.5 ml-1 text-gray-500 transition-colors hover:bg-white/10 hover:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                                    onClick={handleCopy}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    aria-label="Copiar endereço"
+                                    title="Copiar endereço"
+                                >
+                                    <Copy size={10} aria-hidden />
+                                </button>
                             </span>
                         </div>
                     </div>
@@ -81,37 +114,51 @@ function FlowTrackNodeComponent({ id, data, sourcePosition, targetPosition, drag
                         {NodeIcon}
                         <span className="font-mono leading-tight break-all text-left" style={{ fontSize: 9, color: '#6B7280' }}>
                             {label}
+                            <button
+                                type="button"
+                                className="inline-flex shrink-0 align-middle rounded p-0.5 ml-0.5 text-gray-500 transition-colors hover:bg-white/10 hover:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                                onClick={handleCopy}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                aria-label="Copiar endereço"
+                                title="Copiar endereço"
+                            >
+                                <Copy size={12} aria-hidden />
+                            </button>
                         </span>
                     </div>
                 )}
                 {showActions && (
                     <div className="absolute flex gap-1 items-center cursor-pointer" style={{ bottom: 6, right: 8 }}>
-                        <button
-                            type="button"
-                            className="flex items-center justify-center rounded-md p-1 transition-colors cursor-pointer hover:opacity-90 hover:scale-105"
-                            style={{ background: 'rgba(91,141,239,0.18)', border: '1px solid rgba(91,141,239,0.35)', color: '#8babf5' }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                editContext?.openEditNameTag(id);
-                            }}
-                        >
-                            <Pencil size={12} />
-                        </button>
-                        <button
-                            type="button"
-                            className="flex items-center justify-center rounded-md p-1 transition-colors cursor-pointer hover:opacity-90 hover:scale-105"
-                            style={{ background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171' }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                editContext?.openDeleteNode(id);
-                            }}
-                        >
-                            <Trash2 size={12} />
-                        </button>
+                        {showEdit && (
+                            <button
+                                type="button"
+                                className="flex items-center justify-center rounded-md p-1 transition-colors cursor-pointer hover:opacity-90 hover:scale-105"
+                                style={{ background: 'rgba(91,141,239,0.18)', border: '1px solid rgba(91,141,239,0.35)', color: '#8babf5' }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    editContext?.openEditNameTag(id);
+                                }}
+                            >
+                                <Pencil size={12} />
+                            </button>
+                        )}
+                        {showDelete && (
+                            <button
+                                type="button"
+                                className="flex items-center justify-center rounded-md p-1 transition-colors cursor-pointer hover:opacity-90 hover:scale-105"
+                                style={{ background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171' }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    editContext?.openDeleteNode(id);
+                                }}
+                            >
+                                <Trash2 size={12} />
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

@@ -136,13 +136,13 @@ export function LoginTemplate() {
                     <button
                         type="submit"
                         className={cn(
-                            'mt-6 h-10 w-full font-medium inline-flex cursor-pointer items-center justify-center gap-2 rounded-[6px] text-sm transition-all disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90',
+                            'mt-6 h-10 w-full font-medium inline-flex cursor-pointer items-center justify-center gap-2 rounded-[6px] text-sm transition-all disabled:pointer-events-none disabled:opacity-50 bg-primary text-white hover:bg-primary/90',
                         )}
                         disabled={isLoading}
                     >
                         {isLoading ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
                                 Entrando...
                             </>
                         ) : (

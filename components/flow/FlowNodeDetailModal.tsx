@@ -80,6 +80,9 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
     const iconUrl = endpointExchangeIconUrl ?? chainIconUrl;
     const hasTitleLayout = Boolean(title);
     const isSeedNode = node.data?.isSeedNode === true;
+    const isDepositAddress = typeof title === 'string' && title.includes('Deposit Address');
+    const isHotWallet = Boolean(endpointExchangeIconUrl);
+    const showEditNameTag = !isSeedNode && !isDepositAddress && !isHotWallet;
     const NodeIcon = iconUrl ? <ChainIcon src={iconUrl} size={32} /> : <BinanceLogoIcon size={32} />;
 
     useEffect(() => {
@@ -138,7 +141,7 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
     const handleCopyAddress = useCallback(async () => {
         try {
             await navigator.clipboard.writeText(address);
-            toast.success('Endereço copiado');
+            toast.success('Endereço copiado com sucesso.');
         } catch {
             toast.error('Não foi possível copiar');
         }
@@ -158,7 +161,7 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                             {hasTitleLayout ? <h2 className="font-sans text-base font-bold text-foreground truncate">{title}</h2> : null}
-                            {!isSeedNode && (
+                            {showEditNameTag && (
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -184,18 +187,22 @@ export function FlowNodeDetailModal({ node, onClose, onEditNameTag, onNameTagCha
                                 <X className="h-3.5 w-3.5" />
                             </Button>
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-xs text-muted-foreground break-all">{label}</span>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 shrink-0 cursor-pointer rounded"
-                                onClick={handleCopyAddress}
-                                aria-label="Copiar endereço"
-                            >
-                                <Copy className="h-3 w-3" />
-                            </Button>
-                            {iconUrl ? <ChainIcon src={iconUrl} size={14} /> : <BinanceLogoIcon size={14} />}
+                        <div className="mt-1">
+                            <span className="font-mono text-xs text-muted-foreground break-all">
+                                {label}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="inline-flex h-6 w-6 shrink-0 cursor-pointer align-middle rounded ml-0.5"
+                                    onClick={handleCopyAddress}
+                                    aria-label="Copiar endereço"
+                                >
+                                    <Copy className="h-3 w-3" />
+                                </Button>
+                                <span className="inline-flex align-middle ml-0.5">
+                                    {iconUrl ? <ChainIcon src={iconUrl} size={14} /> : <BinanceLogoIcon size={14} />}
+                                </span>
+                            </span>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                             <span className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
