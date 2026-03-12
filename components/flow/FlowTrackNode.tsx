@@ -45,11 +45,7 @@ function FlowTrackNodeComponent({ id, data, sourcePosition, targetPosition, drag
     const isDepositAddress = typeof title === 'string' && title.includes('Deposit Address');
     const isHotWallet = Boolean(endpointExchangeIconUrl);
     const isOnPathToHotWallet = data?.isOnPathToHotWallet === true;
-    const showEdit =
-        hovered &&
-        !(data?.isSeedNode === true) &&
-        !isDepositAddress &&
-        !isHotWallet;
+    const showEdit = hovered && !(data?.isSeedNode === true) && !isDepositAddress && !isHotWallet;
     const showDelete = hovered && !isOnPathToHotWallet;
     const showActions = showEdit || showDelete;
 
@@ -91,7 +87,7 @@ function FlowTrackNodeComponent({ id, data, sourcePosition, targetPosition, drag
                 )}
                 {hasTitleLayout ? (
                     <div className="flex items-center gap-2 min-w-0">
-                        {NodeIcon}
+                        <span className="shrink-0 -translate-y-[3.5px]">{NodeIcon}</span>
                         <div className="flex flex-col gap-0.5 min-w-0">
                             <span className="font-sans font-bold text-xs text-white whitespace-nowrap truncate">{title}</span>
                             <span className="font-mono leading-tight break-all" style={{ fontSize: 9, color: '#6B7280' }}>
@@ -111,7 +107,7 @@ function FlowTrackNodeComponent({ id, data, sourcePosition, targetPosition, drag
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 min-w-0">
-                        {NodeIcon}
+                        <span className="shrink-0 -translate-y-[3.5px]">{NodeIcon}</span>
                         <span className="font-mono leading-tight break-all text-left" style={{ fontSize: 9, color: '#6B7280' }}>
                             {label}
                             <button

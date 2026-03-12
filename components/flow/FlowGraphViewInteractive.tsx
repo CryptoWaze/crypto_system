@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ReactFlow, Background, Controls, Panel, useNodesState, useEdgesState } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { Node, Edge, OnNodesChange, OnEdgesChange } from '@xyflow/react';
 import type { FlowGraph } from '@/lib/types/tracking';
 import type { FlowGraphWithTimestamps, SoftDeleteTransactionItem } from '@/lib/utils/flow-track-graph';
 import type { EditCaseWalletPayload } from '@/lib/services/cases/edit-case.service';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FlowGraphEditContext } from './FlowGraphEditContext';
 import { flowGraphToReactFlow } from './utils/flowGraphToReactFlow';
 import { FlowTrackNode } from './FlowTrackNode';
@@ -16,7 +17,7 @@ import { FlowNodeDetailModal } from './FlowNodeDetailModal';
 import { FlowEdgeDetailModal } from './FlowEdgeDetailModal';
 import { EditNameTagModal } from './EditNameTagModal';
 import { ConfirmDeleteNodeModal } from './ConfirmDeleteNodeModal';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 const NODE_TYPES = { flowTrackNode: FlowTrackNode };
 const EDGE_TYPES = { flowTrackBezier: FlowTrackBezierEdge };
@@ -55,20 +56,6 @@ export function FlowGraphViewInteractive({
     const [editNameTagNode, setEditNameTagNode] = useState<Node | null>(null);
     const [deleteNodeId, setDeleteNodeId] = useState<string | null>(null);
     const [edgeStyle, setEdgeStyle] = useState<EdgeLineStyle>('bezier');
-    const [edgeStyleDropdownOpen, setEdgeStyleDropdownOpen] = useState(false);
-    const edgeStylePanelRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!edgeStyleDropdownOpen) return;
-        const handleClickOutside = (evt: MouseEvent) => {
-            const target = evt.target;
-            if (edgeStylePanelRef.current && target instanceof Node && !edgeStylePanelRef.current.contains(target)) {
-                setEdgeStyleDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [edgeStyleDropdownOpen]);
 
     useEffect(() => {
         setNodes(initialNodes);
@@ -153,8 +140,8 @@ export function FlowGraphViewInteractive({
     const edgeStyleOptions: { value: EdgeLineStyle; label: string }[] = [
         { value: 'bezier', label: 'Curva' },
         { value: 'straight', label: 'Reta' },
-        { value: 'smoothstep', label: 'Degrau suave' },
         { value: 'step', label: 'Degrau' },
+        { value: 'smoothstep', label: 'Degrau suave' },
     ];
 
     return (
@@ -187,47 +174,31 @@ export function FlowGraphViewInteractive({
                         <Background gap={16} size={1} color="rgba(255,255,255,0.06)" />
                         <Controls showInteractive={false} position="bottom-right" className="flow-track-controls" />
                         <Panel position="top-right" className="flow-track-edge-style-panel">
-                            <div ref={edgeStylePanelRef} className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setEdgeStyleDropdownOpen((o) => !o)}
-                                    className="flex cursor-pointer items-center gap-3 rounded-[6px] border border-white/6 bg-[#25262a] px-3 py-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.35)] transition-all duration-200 hover:border-white/10 hover:bg-[#2d2e33]"
-                                    style={{ minWidth: 140 }}
-                                >
-                                    <span className="flex-1 text-left text-sm font-semibold text-white">
-                                        {edgeStyleOptions.find((o) => o.value === edgeStyle)?.label ?? 'Curva'}
-                                    </span>
-                                    <ChevronDown
-                                        size={16}
-                                        className="shrink-0 text-gray-400 transition-transform duration-200"
-                                        style={{ transform: edgeStyleDropdownOpen ? 'rotate(180deg)' : 'none' }}
-                                    />
-                                </button>
-                                {edgeStyleDropdownOpen && (
-                                    <div className="absolute right-0 top-full z-50 mt-2 flex flex-col overflow-hidden rounded-[6px] border border-white/6 bg-[#25262a] shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
-                                        {edgeStyleOptions.map((opt, index) => (
-                                            <button
-                                                key={opt.value}
-                                                type="button"
-                                                onClick={() => {
-                                                    setEdgeStyle(opt.value);
-                                                    setEdgeStyleDropdownOpen(false);
-                                                }}
-                                                className={`flex items-center cursor-pointer gap-2.5 px-3 py-2.5 text-left text-sm transition-colors hover:bg-white/6 ${index === 0 ? 'rounded-t-[6px]' : ''} ${index === edgeStyleOptions.length - 1 ? 'rounded-b-[6px]' : ''}`}
-                                                style={{
-                                                    backgroundColor: edgeStyle === opt.value ? 'rgba(91,141,239,0.18)' : 'transparent',
-                                                    color: edgeStyle === opt.value ? '#a5c0fa' : '#d1d5db',
-                                                }}
-                                            >
-                                                <span className="flex h-1.5 w-1.5 shrink-0 items-center justify-center rounded-full">
-                                                    {edgeStyle === opt.value ? <span className="h-1.5 w-1.5 rounded-full bg-[#8babf5]" /> : null}
-                                                </span>
-                                                <span className={edgeStyle === opt.value ? 'font-medium' : ''}>{opt.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className="flex min-w-[140px] cursor-pointer items-center justify-between gap-2 rounded-[6px] border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm transition-[transform,box-shadow] duration-200 hover:border-zinc-300 hover:bg-zinc-50  dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-500 dark:hover:bg-zinc-700"
+                                    >
+                                        <span className="flex-1 text-left font-medium">
+                                            {edgeStyleOptions.find((o) => o.value === edgeStyle)?.label ?? 'Curva'}
+                                        </span>
+                                        <ChevronDown size={16} className="shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="min-w-[140px]">
+                                    {edgeStyleOptions.map((opt) => (
+                                        <DropdownMenuItem
+                                            key={opt.value}
+                                            onClick={() => setEdgeStyle(opt.value as EdgeLineStyle)}
+                                            className="flex cursor-pointer items-center justify-between gap-2"
+                                        >
+                                            <span>{opt.label}</span>
+                                            {edgeStyle === opt.value && <Check size={16} className="shrink-0" aria-hidden />}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </Panel>
                     </ReactFlow>
                 </div>
@@ -244,7 +215,8 @@ export function FlowGraphViewInteractive({
                 <EditNameTagModal
                     open={!!editNameTagNode}
                     onClose={() => setEditNameTagNode(null)}
-                    chain="BSC"
+                    chain={(editNameTagNode?.data?.chainName as string) ?? (editNameTagNode?.data?.chainSlug as string) ?? 'BSC'}
+                    chainIconUrl={(editNameTagNode?.data?.chainIconUrl as string) ?? null}
                     address={editNameTagNode?.id ?? ''}
                     currentNameTag={
                         editNameTagNode
