@@ -17,7 +17,7 @@ import { FlowNodeDetailModal } from './FlowNodeDetailModal';
 import { FlowEdgeDetailModal } from './FlowEdgeDetailModal';
 import { EditNameTagModal } from './EditNameTagModal';
 import { ConfirmDeleteNodeModal } from './ConfirmDeleteNodeModal';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, ChevronUp } from 'lucide-react';
 
 const NODE_TYPES = { flowTrackNode: FlowTrackNode };
 const EDGE_TYPES = { flowTrackBezier: FlowTrackBezierEdge };
@@ -173,32 +173,34 @@ export function FlowGraphViewInteractive({
                         <FitViewOnce />
                         <Background gap={16} size={1} color="rgba(255,255,255,0.06)" />
                         <Controls showInteractive={false} position="bottom-right" className="flow-track-controls" />
-                        <Panel position="top-right" className="flow-track-edge-style-panel">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <button
-                                        type="button"
-                                        className="flex min-w-[140px] cursor-pointer items-center justify-between gap-2 rounded-[6px] border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm transition-[transform,box-shadow] duration-200 hover:border-zinc-300 hover:bg-zinc-50  dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-500 dark:hover:bg-zinc-700"
-                                    >
-                                        <span className="flex-1 text-left font-medium">
-                                            {edgeStyleOptions.find((o) => o.value === edgeStyle)?.label ?? 'Curva'}
-                                        </span>
-                                        <ChevronDown size={16} className="shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="min-w-[140px]">
-                                    {edgeStyleOptions.map((opt) => (
-                                        <DropdownMenuItem
-                                            key={opt.value}
-                                            onClick={() => setEdgeStyle(opt.value as EdgeLineStyle)}
-                                            className="flex cursor-pointer items-center justify-between gap-2"
+                        <Panel position="bottom-right" className="flow-track-edge-style-panel">
+                            <div className="mr-10">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            type="button"
+                                            className="flex min-w-[140px] cursor-pointer items-center justify-between gap-2 rounded-[6px] border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm transition-[transform,box-shadow] duration-200 hover:border-zinc-300 hover:bg-zinc-50  dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-500 dark:hover:bg-zinc-700"
                                         >
-                                            <span>{opt.label}</span>
-                                            {edgeStyle === opt.value && <Check size={16} className="shrink-0" aria-hidden />}
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                            <span className="flex-1 text-left font-medium">
+                                                {edgeStyleOptions.find((o) => o.value === edgeStyle)?.label ?? 'Curva'}
+                                            </span>
+                                            <ChevronUp size={16} className="shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="min-w-[140px]">
+                                        {edgeStyleOptions.map((opt) => (
+                                            <DropdownMenuItem
+                                                key={opt.value}
+                                                onClick={() => setEdgeStyle(opt.value as EdgeLineStyle)}
+                                                className="flex cursor-pointer items-center justify-between gap-2"
+                                            >
+                                                <span>{opt.label}</span>
+                                                {edgeStyle === opt.value && <Check size={16} className="shrink-0" aria-hidden />}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </Panel>
                     </ReactFlow>
                 </div>
