@@ -8,8 +8,9 @@ import { editCase } from '@/lib/services/cases/edit-case.service';
 import { caseByIdResponseToFlowGraph } from '@/lib/utils/case-api-to-flow-graph';
 import { FlowGraphView } from '@/components/flow/FlowGraphView';
 import { AppHeader } from '@/components/common/appHeader';
+import { CaseReportsModal } from '@/components/common/CaseReportsModal';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileX2 } from 'lucide-react';
+import { Loader2, FileX2, FileText } from 'lucide-react';
 import { useToast } from '@/lib/toast-context';
 import type { FlowGraphWithTimestamps } from '@/lib/utils/flow-track-graph';
 import type { EditCaseWalletPayload } from '@/lib/services/cases/edit-case.service';
@@ -27,6 +28,7 @@ export function CaseHistoryTemplate() {
     const [endpointExchangeName, setEndpointExchangeName] = useState<string | null>(null);
     const [endpointHotWalletLabel, setEndpointHotWalletLabel] = useState<string | null>(null);
     const [meusCasosOpen, setMeusCasosOpen] = useState(false);
+    const [reportsModalOpen, setReportsModalOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
     const accessToken = session?.user?.accessToken;
     const toast = useToast();
@@ -162,7 +164,7 @@ export function CaseHistoryTemplate() {
         <div className="min-h-screen w-full overflow-auto bg-background">
             <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
             <div className="h-14 shrink-0" aria-hidden />
-            <main className="h-[calc(100vh-3.5rem)] w-full">
+            <main className="relative h-[calc(100vh-3.5rem)] w-full">
                 <FlowGraphView
                     graph={graphData}
                     className="h-full w-full"
@@ -173,7 +175,17 @@ export function CaseHistoryTemplate() {
                     onEditWallets={handleEditWallets}
                     onSoftDeleteTransactions={handleSoftDeleteTransactions}
                 />
+                <Button
+                    type="button"
+                    onClick={() => setReportsModalOpen(true)}
+                    className="absolute top-4 right-4 z-10 h-10 rounded-[6px] bg-primary px-4 shadow-lg transition-shadow hover:bg-primary/90 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Abrir relatórios do caso"
+                >
+                    <FileText className="h-5 w-5 shrink-0" aria-hidden />
+                    Relatórios
+                </Button>
             </main>
+            <CaseReportsModal open={reportsModalOpen} onClose={() => setReportsModalOpen(false)} caseId={id} accessToken={accessToken} />
         </div>
     );
 }
