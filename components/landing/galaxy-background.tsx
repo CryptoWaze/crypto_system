@@ -35,7 +35,7 @@ export function GalaxyBackground() {
           background: 'radial-gradient(ellipse 110% 77% at 50% -15%, rgba(251, 191, 36, 0.14), rgba(245, 158, 11, 0.06) 35%, transparent 55%)',
         }}
       />
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden [contain:layout]" aria-hidden>
         {stars.map((s, i) => (
           <span
             key={i}

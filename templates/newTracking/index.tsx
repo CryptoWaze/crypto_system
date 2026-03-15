@@ -245,7 +245,7 @@ export function NewTrackingTemplate() {
             </main>
 
             {currentStep === 1 && (
-                <footer className="fixed inset-x-0 bottom-0 z-10 flex h-14 w-full items-center justify-center border-t border-border/80 bg-background/90 px-4 backdrop-blur sm:px-6">
+                <footer className="fixed inset-x-0 bottom-0 z-10 flex h-14 w-full items-center justify-center border-t border-border/80 bg-background px-4 sm:px-6">
                     <div className="mx-auto flex w-full flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-2">
                         <Button type="button" variant="outline" onClick={handleCancelClick} className="h-10 w-full rounded-[6px] sm:w-auto">
                             Cancelar

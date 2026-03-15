@@ -17,7 +17,7 @@ const FAQ_ITEMS = [
     {
         question: 'Quais blockchains são suportadas?',
         answer:
-            'Hoje suportamos Ethereum, BSC, Polygon, Arbitrum, Base e Avalanche. Novas redes são integradas conforme demanda. O rastreio considera transferências nativas e de tokens (ERC-20 e equivalentes) em cada chain.',
+            'Hoje suportamos Ethereum, BSC, Polygon, Arbitrum, Avalanche, Bitcoin e Solana. Novas redes são integradas conforme demanda. O rastreio considera transferências nativas e de tokens (ERC-20 e equivalentes) em cada chain.',
     },
     {
         question: 'Em que formato são os relatórios?',

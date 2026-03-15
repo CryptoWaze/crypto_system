@@ -7,8 +7,9 @@ const CHAINS = [
     'BSC',
     'Polygon',
     'Arbitrum',
-    'Base',
     'Avalanche',
+    'Bitcoin',
+    'Solana',
 ] as const;
 
 export function LandingChains() {
@@ -25,7 +26,7 @@ export function LandingChains() {
                     {CHAINS.map((chain, i) => (
                         <li
                             key={i}
-                            className="rounded-lg border border-border/70 bg-background/80 px-4 py-2.5 text-sm font-medium text-foreground/90 backdrop-blur sm:px-5 sm:py-3"
+                            className="rounded-lg border border-border/70 bg-card/60 px-4 py-2.5 text-sm font-medium text-foreground/90 sm:px-5 sm:py-3"
                         >
                             {chain}
                         </li>

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { AnimatedCounter } from './animated-counter';
 
 const STATS = [
-    { type: 'counter' as const, end: 5, suffix: '+', formatThousands: false, label: 'Blockchains suportadas' },
+    { type: 'counter' as const, end: 7, suffix: '+', formatThousands: false, label: 'Blockchains suportadas' },
     { type: 'counter' as const, end: 9000, suffix: '+', formatThousands: true, label: 'Tokens rastreaveis' },
     { type: 'text' as const, value: 'Rede', label: 'Inteligência on-chain' },
 ] as const;
@@ -17,7 +17,7 @@ export function LandingStats() {
         <section
             ref={ref}
             className={cn(
-                'landing-animate-on-scroll relative border-y border-border/60 bg-background/50 landing-section',
+                'landing-animate-on-scroll relative bg-background/50 landing-section',
                 isInView && 'landing-in-view'
             )}
             aria-labelledby="stats-heading"

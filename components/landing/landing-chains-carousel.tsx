@@ -25,13 +25,12 @@ function filterChainsForCarousel(chains: Chain[]): Chain[] {
 
 function ChainLogo({ chain, index }: { chain: Chain; index: number }) {
   const [imageError, setImageError] = useState(false);
-  const style = { '--i': index } as React.CSSProperties;
   const showImage = chain.iconUrl && !imageError;
 
   return (
     <li
       className="chains-carousel-item flex shrink-0 items-center justify-center rounded-xl border border-border/40 bg-card/40 px-6 py-4"
-      style={style}
+      style={{ '--i': index } as React.CSSProperties}
     >
       {showImage && chain.iconUrl ? (
         <img

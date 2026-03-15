@@ -263,6 +263,9 @@
         opacity: 0.55;
     }
 }
+.galaxy-dot {
+    will-change: transform;
+}
 .galaxy-dot.galaxy-dot-1 {
     animation: galaxy-wander-1 50s ease-in-out infinite;
 }
@@ -272,7 +275,7 @@
 .galaxy-dot.galaxy-dot-3 {
     animation: galaxy-wander-3 48s ease-in-out infinite;
 }
-.galaxy-dot {
+.galaxy-dot:not([class*='galaxy-dot-']) {
     animation: galaxy-wander-1 50s ease-in-out infinite;
 }
 
@@ -354,7 +357,7 @@
         transform: translateX(0);
     }
     100% {
-        transform: translateX(-25%);
+        transform: translateX(-50%);
     }
 }
 
@@ -364,17 +367,19 @@
         transform: translateY(0);
     }
     50% {
-        transform: translateY(-4px);
+        transform: translateY(-10px);
     }
 }
 
 .chains-carousel-track {
+    will-change: transform;
     animation: chains-carousel-scroll 40s linear infinite;
 }
 
 .chains-carousel-item {
-    animation: chains-carousel-float 3s ease-in-out infinite;
-    animation-delay: calc(var(--i) * -0.4s);
+    will-change: transform;
+    animation: chains-carousel-float 3.5s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.35s);
 }
 
 .scrollbar-thin {

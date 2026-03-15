@@ -15,7 +15,7 @@ export function HomeTemplate() {
     return (
         <main className="flex min-h-screen flex-col">
             <header
-                className="fixed inset-x-0 top-0 z-20 flex h-14 w-full items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur sm:px-6"
+                className="fixed inset-x-0 top-0 z-20 flex h-14 w-full items-center justify-between border-b border-border bg-background px-4 sm:px-6"
                 style={{ boxShadow: '0 1px 0 0 rgba(74, 126, 217, 0.06)' }}
             >
                 <Link href="/" className="flex shrink-0 items-center" aria-label="CryptoForense - início">

@@ -41,7 +41,7 @@ export function AppHeader({ meusCasosOpen: meusCasosOpenProp, onMeusCasosOpenCha
     return (
         <>
             <header
-                className="fixed inset-x-0 top-0 z-10 flex h-14 w-full items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/90 sm:px-6"
+                className="fixed inset-x-0 top-0 z-10 flex h-14 w-full items-center justify-between border-b border-border bg-background px-4 sm:px-6"
                 style={{ boxShadow: '0 1px 0 0 rgba(91, 141, 239, 0.06)' }}
             >
                 <Link href="/dashboard" className="flex shrink-0 items-center" aria-label="CryptoForense - início">

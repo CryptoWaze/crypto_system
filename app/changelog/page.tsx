@@ -9,7 +9,7 @@ const CHANGELOG_ENTRIES = [
     {
         date: '2025-03-14',
         title: 'Suporte a múltiplas blockchains',
-        description: 'Rastreio disponível em Ethereum, BSC, Polygon, Arbitrum, Base e Avalanche. Novas chains integradas conforme demanda.',
+        description: 'Rastreio disponível em Ethereum, BSC, Polygon, Arbitrum, Avalanche, Bitcoin e Solana. Novas chains integradas conforme demanda.',
     },
     {
         date: '2025-03-14',
