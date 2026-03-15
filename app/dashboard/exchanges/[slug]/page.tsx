@@ -1,12 +1,11 @@
 import { ExchangeTemplate } from '@/templates/exchange';
 
 type Props = {
-  params: {
-    slug: string;
-  };
+  params: Promise<{ slug: string }>;
 };
 
-export default function ExchangePage({ params }: Props) {
-  return <ExchangeTemplate slug={params.slug} />;
+export default async function ExchangePage({ params }: Props) {
+  const { slug } = await params;
+  return <ExchangeTemplate slug={slug} />;
 }
 

@@ -131,7 +131,7 @@ export function LoginCoinsVault() {
         className="absolute inset-4 flex flex-col rounded-2xl border-2 border-white/10 bg-black/20 shadow-[inset_0_0_80px_rgba(0,0,0,0.2)] backdrop-blur-sm lg:inset-6"
         style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}
       >
-        <div className="relative h-full w-full flex-1 overflow-hidden">
+        <div className="relative min-h-0 flex-1 w-full overflow-hidden" style={{ minHeight: '400px' }}>
           {coinsWithPositions.map(({ token: t, leftPct, bottomPx, size, delay, duration }, i) => {
             return (
               <div
@@ -144,7 +144,6 @@ export function LoginCoinsVault() {
                   height: size,
                   animationDuration: `${duration}s`,
                   animationDelay: `${delay}s`,
-                  transform: 'translateY(-100vh)',
                 }}
               >
                 {t.imageUrl ? (
@@ -153,6 +152,7 @@ export function LoginCoinsVault() {
                     alt=""
                     className="h-full w-full rounded-full object-cover"
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                   />
                 ) : (
                   <span className="flex h-full w-full items-center justify-center text-lg font-bold text-muted-foreground">
