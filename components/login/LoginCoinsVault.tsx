@@ -19,6 +19,7 @@ const VERTICAL_PADDING = 60;
 const INITIAL_FALL_SPEED = 0.9;
 const FAST_PHASE_MS = 5000;
 const FAST_PHASE_TIME_SCALE = 3;
+const TRAY_HEIGHT_PX = 200;
 
 function seed(step: number) {
   const x = Math.sin(step * 12.9898) * 43758.5453;
@@ -57,6 +58,7 @@ export function LoginCoinsVault() {
   const [tokens, setTokens] = useState<TopToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [imagesReady, setImagesReady] = useState(false);
+  const [knobRotation, setKnobRotation] = useState(0);
 
   useEffect(() => {
     getTop500Tokens()
@@ -283,13 +285,31 @@ export function LoginCoinsVault() {
         <div
           ref={containerRef}
           className="relative min-h-0 flex-1 w-full overflow-hidden"
-          style={{ minHeight: '400px' }}
+          style={{ minHeight: '320px' }}
         >
           <canvas
             ref={canvasRef}
             className="absolute inset-0 h-full w-full"
             style={{ display: 'block' }}
           />
+        </div>
+        <div
+          className="relative flex-shrink-0 w-full rounded-b-xl border-t border-white/10 bg-zinc-700/90"
+          style={{ height: TRAY_HEIGHT_PX, boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.25)' }}
+        >
+          <button
+            type="button"
+            onClick={() => setKnobRotation((r) => r + 720)}
+            className="absolute left-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-2 border-zinc-500/80 bg-gradient-to-br from-zinc-400 to-zinc-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3),0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-transform duration-[1250ms] ease-out"
+            style={{ transform: `rotate(${knobRotation}deg)` }}
+            aria-label="Girar manivela"
+          >
+            <span
+              className="w-4 h-5 rounded-sm bg-zinc-500/90 -translate-y-1 shadow-sm"
+              style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+              aria-hidden
+            />
+          </button>
         </div>
       </div>
     </div>
