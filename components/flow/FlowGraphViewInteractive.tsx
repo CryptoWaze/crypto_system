@@ -150,7 +150,7 @@ export function FlowGraphViewInteractive({
                 <div
                     className="flow-track-graph absolute inset-0 rounded-xl"
                     style={{
-                        backgroundColor: '#303135',
+                        backgroundColor: 'var(--background)',
                         minHeight: 480,
                     }}
                 >

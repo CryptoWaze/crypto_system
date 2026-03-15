@@ -60,13 +60,12 @@ export function LoginTemplate() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
-            <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card/80 px-8 py-10 text-center shadow-[0_0_40px_-12px_var(--glow-blue)]">
-                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Plataforma de investigação</p>
-                <div className="mt-3 flex justify-center">
-                    <img src="/logo.png" alt="CryptoForense" className="h-12 w-auto sm:h-14" width={180} height={48} />
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">Acesse sua conta</p>
+        <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+            <div className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16">
+                <div className="mx-auto w-full max-w-sm">
+                    <div className="flex justify-center">
+                        <img src="/logo.png" alt="CryptoForense" className="h-12 w-auto sm:h-14" width={180} height={48} />
+                    </div>
 
                 <form onSubmit={handleSubmit} className="mt-10 space-y-4 text-left">
                     <div className="space-y-2">
@@ -87,7 +86,7 @@ export function LoginTemplate() {
                                     setErrors((prev) => ({ ...prev, email: undefined }));
                                     setFormData({ ...formData, email: e.target.value });
                                 }}
-                                className={cn(errors.email ? 'border-destructive pl-10' : 'pl-10')}
+                                className={cn('h-11', errors.email ? 'border-destructive pl-10' : 'pl-10')}
                                 disabled={isLoading}
                             />
                         </div>
@@ -99,7 +98,7 @@ export function LoginTemplate() {
                             <Label htmlFor="password" className="text-foreground">
                                 Senha
                             </Label>
-                            <Link href="#" className="text-xs text-muted-foreground hover:text-foreground hover:underline">
+                            <Link href="#" className="text-xs text-muted-foreground hover:text-primary hover:underline">
                                 Esqueceu sua senha?
                             </Link>
                         </div>
@@ -117,7 +116,7 @@ export function LoginTemplate() {
                                     setErrors((prev) => ({ ...prev, password: undefined }));
                                     setFormData({ ...formData, password: e.target.value });
                                 }}
-                                className={cn(errors.password ? 'border-destructive pl-10 pr-10' : 'pl-10 pr-10')}
+                                className={cn('h-11', errors.password ? 'border-destructive pl-10 pr-10' : 'pl-10 pr-10')}
                                 disabled={isLoading}
                             />
                             <button
@@ -133,33 +132,43 @@ export function LoginTemplate() {
                         {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
                     </div>
 
-                    <button
-                        type="submit"
-                        className={cn(
-                            'mt-6 h-10 w-full font-medium inline-flex cursor-pointer items-center justify-center gap-2 rounded-[6px] text-sm transition-all disabled:pointer-events-none disabled:opacity-50 bg-primary text-white hover:bg-primary/90',
-                        )}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
-                                Entrando...
-                            </>
-                        ) : (
-                            'Entrar na CryptoForense'
-                        )}
-                    </button>
-                </form>
+                        <Button
+                            type="submit"
+                            className="mt-6 h-11 w-full rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Entrando...
+                                </>
+                            ) : (
+                                'Entrar na CryptoForense'
+                            )}
+                        </Button>
+                    </form>
 
-                <p className="mt-6 text-center text-xs text-muted-foreground">Acesso restrito a usuários autorizados.</p>
+                    <p className="mt-6 text-center text-xs text-muted-foreground lg:text-left">
+                        Acesso restrito a clientes autorizados. Ambiente seguro.
+                    </p>
+                    <p className="mt-4 text-center text-xs text-muted-foreground lg:text-left">
+                        Voltar para a{' '}
+                        <Link href="/" className="text-primary hover:text-primary/90 hover:underline">
+                            página inicial
+                        </Link>
+                    </p>
+                </div>
             </div>
-            <div className="mx-auto mt-6 w-full max-w-sm text-center">
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                    Voltar para a{' '}
-                    <Link href="/" className="text-primary hover:underline">
-                        página inicial
-                    </Link>
-                </p>
+
+            <div className="relative hidden min-h-screen overflow-hidden bg-secondary/30 lg:block">
+                <img
+                    src="/login-panel.jpg"
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                    }}
+                />
             </div>
         </div>
     );

@@ -13,8 +13,8 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-    title: 'CryptoForense | Rastreio de Transações em Blockchain',
-    description: 'Plataforma de rastreio de transações em blockchain para investigação e identificação de destinos.',
+    title: 'CryptoForense | Rede de Inteligência On-Chain',
+    description: 'Rastreio e análise de transações em blockchain. Múltiplas chains, milhares de tokens. Investigação, compliance e recuperação de ativos.',
 };
 
 export default function RootLayout({

@@ -8,6 +8,7 @@ import { editCase } from '@/lib/services/cases/edit-case.service';
 import { caseByIdResponseToFlowGraph } from '@/lib/utils/case-api-to-flow-graph';
 import { FlowGraphView } from '@/components/flow/FlowGraphView';
 import { AppHeader } from '@/components/common/appHeader';
+import { DashboardBreadcrumb } from '@/components/common/dashboard-breadcrumb';
 import { CaseReportsModal } from '@/components/common/CaseReportsModal';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileX2, FileText } from 'lucide-react';
@@ -47,7 +48,6 @@ export function CaseHistoryTemplate() {
         let cancelled = false;
         (async () => {
             const result = await getCaseById(id, accessToken);
-            console.log(result);
             if (cancelled) return;
             if (!result.ok) {
                 setError(result.message);
@@ -160,11 +160,20 @@ export function CaseHistoryTemplate() {
 
     if (!graphData || !id || !accessToken) return null;
 
+    const breadcrumbItems = [
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Casos', href: '/dashboard' },
+        { label: caseName ?? 'Caso', href: undefined },
+    ];
+
     return (
         <div className="min-h-screen w-full overflow-auto bg-background">
             <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
             <div className="h-14 shrink-0" aria-hidden />
-            <main className="relative h-[calc(100vh-3.5rem)] w-full">
+            <div className="flex h-12 shrink-0 items-center border-b border-border/60 bg-background px-4 sm:px-6">
+                <DashboardBreadcrumb items={breadcrumbItems} />
+            </div>
+            <main className="relative h-[calc(100vh-3.5rem-3rem)] w-full min-h-0">
                 <FlowGraphView
                     graph={graphData}
                     className="h-full w-full"

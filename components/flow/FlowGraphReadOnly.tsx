@@ -33,7 +33,7 @@ const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
         <div
             className={`flow-track-graph ${className ?? 'rounded-xl'}`}
             style={{
-                backgroundColor: '#303135',
+                backgroundColor: 'var(--background)',
                 width: '100%',
                 height: '100%',
                 minHeight: 480,

@@ -176,6 +176,16 @@ export function NewTrackingTemplate() {
     }, [showResults, trackingResult?.success, toast]);
 
     const currentStep = showResults ? 3 : isTracking ? 2 : 1;
+    const shouldWarnUnsaved = hasData && currentStep === 1;
+
+    useEffect(() => {
+        if (!shouldWarnUnsaved) return;
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [shouldWarnUnsaved]);
 
     if (status === 'loading') {
         return (
@@ -257,9 +267,9 @@ export function NewTrackingTemplate() {
                     className="w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card p-5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)] sm:max-w-md sm:p-6"
                 >
                     <DialogHeader className="gap-1.5 sm:gap-2">
-                        <DialogTitle className="text-left text-base font-semibold text-foreground sm:text-lg">Fechar sem salvar?</DialogTitle>
+                        <DialogTitle className="text-left text-base font-semibold text-foreground sm:text-lg">Descartar alterações?</DialogTitle>
                         <DialogDescription className="text-left text-sm leading-relaxed text-muted-foreground">
-                            Tem certeza de que deseja fechar? Os dados preenchidos serão perdidos e não poderão ser recuperados.
+                            Os dados preenchidos serão perdidos e não poderão ser recuperados. Deseja sair mesmo assim?
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-4 flex flex-col-reverse gap-3 sm:mt-3 sm:flex-row sm:justify-end sm:gap-2">
