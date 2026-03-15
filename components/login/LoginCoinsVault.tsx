@@ -1,16 +1,79 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getTop500Tokens } from '@/lib/services/tokens/top-500.service';
 import type { TopToken } from '@/lib/types/token';
 
 const COIN_SIZE_MIN = 60;
 const COIN_SIZE_MAX = 120;
 const TOTAL_COINS = 98;
+const GAP = 8;
+const REF_WIDTH = 1100;
+const MAX_PILE_HEIGHT = 1600;
 
 function seed(step: number) {
   const x = Math.sin(step * 12.9898) * 43758.5453;
   return x - Math.floor(x);
+}
+
+function shuffledDelays(n: number, maxSeconds: number): number[] {
+  const arr = Array.from({ length: n }, (_, i) => (i / (n - 1 || 1)) * maxSeconds);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(seed(7731 + i) * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function packCoins(
+  coins: { token: TopToken; size: number; index: number; landingTime: number }[]
+): { leftPct: number; bottomPx: number; size: number }[] {
+  const sorted = [...coins].sort((a, b) => a.landingTime - b.landingTime);
+  const placed: { x: number; y: number; size: number }[] = [];
+
+  for (const coin of sorted) {
+    const { size } = coin;
+    let found = false;
+    for (let y = 0; y <= MAX_PILE_HEIGHT - size && !found; y += Math.max(4, GAP)) {
+      for (let x = 0; x <= REF_WIDTH - size && !found; x += Math.max(4, GAP)) {
+        const overlaps = placed.some(
+          (p) =>
+            x < p.x + p.size + GAP &&
+            x + size + GAP > p.x &&
+            y < p.y + p.size + GAP &&
+            y + size + GAP > p.y
+        );
+        if (!overlaps) {
+          placed.push({ x, y, size });
+          found = true;
+        }
+      }
+    }
+    if (!found) {
+      const maxBottom = placed.length > 0
+        ? Math.max(...placed.map((p) => p.y + p.size)) + GAP
+        : 0;
+      placed.push({
+        x: 0,
+        y: maxBottom,
+        size,
+      });
+    }
+  }
+
+  const byIndex = new Map<number, { x: number; y: number; size: number }>();
+  sorted.forEach((c, i) => {
+    byIndex.set(c.index, placed[i]);
+  });
+
+  return coins.map((c) => {
+    const p = byIndex.get(c.index)!;
+    return {
+      leftPct: (p.x / REF_WIDTH) * 100,
+      bottomPx: p.y,
+      size: p.size,
+    };
+  });
 }
 
 export function LoginCoinsVault() {
@@ -26,7 +89,28 @@ export function LoginCoinsVault() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading || tokens.length === 0) {
+  const coinsWithPositions = useMemo(() => {
+    if (tokens.length === 0) return [];
+    const delays = shuffledDelays(TOTAL_COINS, 6);
+    const coins = tokens.slice(0, TOTAL_COINS).map((t, i) => {
+      const duration = (5 + seed(i * 11) * 4) / 12;
+      const delay = delays[i];
+      return {
+        token: t,
+        size:
+          COIN_SIZE_MIN +
+          Math.floor(seed(i * 17) * (COIN_SIZE_MAX - COIN_SIZE_MIN)),
+        index: i,
+        landingTime: delay + duration,
+        delay,
+        duration,
+      };
+    });
+    const positions = packCoins(coins);
+    return coins.map((c, i) => ({ ...c, ...positions[i] }));
+  }, [tokens]);
+
+  if (loading || coinsWithPositions.length === 0) {
     return (
       <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-secondary/20">
         <div
@@ -41,8 +125,6 @@ export function LoginCoinsVault() {
     );
   }
 
-  const coins = tokens.slice(0, TOTAL_COINS);
-
   return (
     <div className="relative flex min-h-screen w-full overflow-hidden bg-secondary/20">
       <div
@@ -50,14 +132,7 @@ export function LoginCoinsVault() {
         style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}
       >
         <div className="relative h-full w-full flex-1 overflow-hidden">
-          {coins.map((t, i) => {
-            const size =
-              COIN_SIZE_MIN +
-              Math.floor(seed(i * 17) * (COIN_SIZE_MAX - COIN_SIZE_MIN));
-            const leftPct = seed(i * 7) * 100;
-            const bottomPx = Math.floor(seed(i * 13) * 260);
-            const duration = 5 + seed(i * 11) * 4;
-            const delay = seed(i * 23) * 35;
+          {coinsWithPositions.map(({ token: t, leftPct, bottomPx, size, delay, duration }, i) => {
             return (
               <div
                 key={`coin-${t.symbol}-${i}`}
