@@ -54,11 +54,31 @@ export function LoginCoinsVault() {
   const tokensRef = useRef<TopToken[]>([]);
   const animationRef = useRef<number>(0);
   const spawnTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const spawnRewardCoinRef = useRef<(() => void) | null>(null);
+  const spawnCoinInExitRef = useRef<(() => void) | null>(null);
+  const setActiveExitCoinRef = useRef<React.Dispatch<React.SetStateAction<{ id: number; imageUrl: string | null; symbol: string } | null>> | null>(null);
 
   const [tokens, setTokens] = useState<TopToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [imagesReady, setImagesReady] = useState(false);
   const [knobRotation, setKnobRotation] = useState(0);
+  const [purpleButtonRotation, setPurpleButtonRotation] = useState(0);
+  const [activeExitCoin, setActiveExitCoin] = useState<{ id: number; imageUrl: string | null; symbol: string } | null>(null);
+  const [exitCoinPopping, setExitCoinPopping] = useState(false);
+  setActiveExitCoinRef.current = setActiveExitCoin;
+
+  useEffect(() => {
+    if (!activeExitCoin) return;
+    const popTimer = setTimeout(() => setExitCoinPopping(true), 4000);
+    const clearTimer = setTimeout(() => {
+      setActiveExitCoin(null);
+      setExitCoinPopping(false);
+    }, 4600);
+    return () => {
+      clearTimeout(popTimer);
+      clearTimeout(clearTimer);
+    };
+  }, [activeExitCoin?.id]);
 
   useEffect(() => {
     getTop500Tokens()
@@ -166,6 +186,39 @@ export function LoginCoinsVault() {
     };
     scheduleSpawn();
 
+    const spawnRewardCoin = () => {
+      if (tokensList.length === 0 || coinBodies.length === 0) return;
+      const xPositions = [80, width / 2, width - 80];
+      const baseSeed = Date.now() % 1e6;
+      xPositions.forEach((x, i) => {
+        const tokenIndex = Math.floor(Math.random() * tokensList.length);
+        const radius = COIN_RADIUS_MIN + Math.floor(seed(baseSeed + i * 7) * (COIN_RADIUS_MAX - COIN_RADIUS_MIN));
+        const safeX = Math.max(radius + 10, Math.min(width - radius - 10, x));
+        const y = -radius * 2;
+        const body = Matter.Bodies.circle(safeX, y, radius, {
+          restitution: RESTITUTION,
+          friction: FRICTION,
+          frictionAir: 0.0005,
+          density: 0.008,
+          slop: 0,
+        });
+        (body as Matter.Body & { coinRadius: number }).coinRadius = radius;
+        (body as Matter.Body & { tokenIndex: number }).tokenIndex = tokenIndex;
+        Matter.Body.setVelocity(body, { x: 0, y: INITIAL_FALL_SPEED });
+        Matter.World.add(world, body);
+        coinBodies.push(body);
+      });
+    };
+    spawnRewardCoinRef.current = spawnRewardCoin;
+
+    const spawnCoinInExit = () => {
+      if (tokensList.length === 0) return;
+      const tokenIndex = Math.floor(Math.random() * tokensList.length);
+      const token = tokensList[tokenIndex];
+      setActiveExitCoinRef.current?.({ id: Date.now(), imageUrl: token.imageUrl, symbol: token.symbol ?? '' });
+    };
+    spawnCoinInExitRef.current = spawnCoinInExit;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -212,8 +265,9 @@ export function LoginCoinsVault() {
         const pos = body.position;
         const angle = body.angle;
         const radius = (body as Matter.Body & { coinRadius?: number }).coinRadius ?? 30;
-        const img = images[i] ?? null;
-        const token = tokensList[i];
+        const tokenIndex = (body as Matter.Body & { tokenIndex?: number }).tokenIndex ?? i;
+        const img = images[tokenIndex] ?? null;
+        const token = tokensList[tokenIndex];
 
         ctx.save();
         ctx.translate(pos.x, pos.y);
@@ -251,6 +305,8 @@ export function LoginCoinsVault() {
     animationRef.current = requestAnimationFrame(draw);
 
     return () => {
+      spawnRewardCoinRef.current = null;
+      spawnCoinInExitRef.current = null;
       spawnTimeoutsRef.current.forEach(clearTimeout);
       spawnTimeoutsRef.current = [];
       cancelAnimationFrame(animationRef.current);
@@ -263,7 +319,7 @@ export function LoginCoinsVault() {
 
   if (loading || tokens.length === 0) {
     return (
-      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-secondary/20">
+      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-black">
         <div
           className="absolute inset-4 flex items-center justify-center rounded-2xl border-2 border-white/10 bg-black/20 backdrop-blur-sm lg:inset-6"
           style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}
@@ -277,7 +333,7 @@ export function LoginCoinsVault() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full overflow-hidden bg-secondary/20">
+    <div className="relative flex min-h-screen w-full overflow-hidden bg-black">
       <div
         className="absolute inset-4 flex flex-col rounded-2xl border-2 border-white/10 bg-black/20 shadow-[inset_0_0_80px_rgba(0,0,0,0.2)] backdrop-blur-sm lg:inset-6"
         style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}
@@ -297,15 +353,70 @@ export function LoginCoinsVault() {
           className="relative flex-shrink-0 w-full rounded-b-xl border-t border-white/10 bg-zinc-700/90"
           style={{ height: TRAY_HEIGHT_PX, boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.25)' }}
         >
+          <img
+            src="/logo.png"
+            alt="CryptoForense"
+            className="absolute left-1/2 top-1/2 h-[2.925rem] w-auto -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-90"
+            width={182}
+            height={47}
+          />
+          <div
+            className="absolute right-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-2 border-zinc-500/90 bg-gradient-to-b from-zinc-500 to-zinc-700 pointer-events-none flex items-center justify-center overflow-hidden"
+            style={{ boxShadow: 'inset 0 6px 16px rgba(0,0,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.2)' }}
+            aria-hidden
+          >
+            {activeExitCoin && (
+              <div
+                className="absolute inset-0 rounded-full bg-zinc-600/80 border border-white/10 overflow-hidden flex items-center justify-center exit-coin-enter transition-all duration-300 ease-out"
+                style={
+                  exitCoinPopping
+                    ? { transform: 'scale(1.5)', opacity: 0 }
+                    : undefined
+                }
+              >
+                {activeExitCoin.imageUrl ? (
+                  <img
+                    src={activeExitCoin.imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="text-xl font-medium text-white/80">{activeExitCoin.symbol.slice(0, 2)}</span>
+                )}
+              </div>
+            )}
+          </div>
           <button
             type="button"
-            onClick={() => setKnobRotation((r) => r + 720)}
-            className="absolute left-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-2 border-zinc-500/80 bg-gradient-to-br from-zinc-400 to-zinc-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3),0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-transform duration-[1250ms] ease-out"
+            onClick={() => {
+              if (activeExitCoin) return;
+              setKnobRotation((r) => r + 720);
+              spawnCoinInExitRef.current?.();
+            }}
+            disabled={activeExitCoin !== null}
+            className="absolute left-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-2 border-zinc-500/80 disabled:opacity-50 disabled:pointer-events-none bg-gradient-to-br from-zinc-400 to-zinc-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3),0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-transform duration-[1250ms] ease-out"
             style={{ transform: `rotate(${knobRotation}deg)` }}
-            aria-label="Girar manivela"
+            aria-label="Manivela"
           >
             <span
               className="w-4 h-5 rounded-sm bg-zinc-500/90 -translate-y-1 shadow-sm"
+              style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+              aria-hidden
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPurpleButtonRotation((r) => r + 720);
+              spawnRewardCoinRef.current?.();
+            }}
+            className="absolute left-[7.5rem] top-[calc(50%+1.25rem)] w-9 h-9 rounded-full border-2 border-purple-500/80 bg-gradient-to-br from-purple-400 to-purple-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_2px_6px_rgba(0,0,0,0.3)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50 transition-transform duration-[1250ms] ease-out"
+            style={{ transform: `rotate(${purpleButtonRotation}deg)` }}
+            aria-label="Girar e soltar bolinha"
+          >
+            <span
+              className="w-2 h-2.5 rounded-sm bg-purple-500/90 -translate-y-0.5 shadow-sm"
               style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
               aria-hidden
             />

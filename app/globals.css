@@ -534,3 +534,20 @@
 .login-coin-falling {
     animation: login-coin-fall linear both;
 }
+
+@keyframes exit-coin-enter {
+    0% {
+        transform: translateY(-120%) rotate(-400deg);
+        opacity: 0;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+}
+.exit-coin-enter {
+    animation: exit-coin-enter 0.55s ease-out forwards;
+}

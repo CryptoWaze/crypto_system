@@ -61,8 +61,8 @@ export function LoginTemplate() {
     };
 
     return (
-        <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-            <div className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16">
+        <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2 bg-black">
+            <div className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 bg-black">
                 <div className="mx-auto w-full max-w-sm">
                     <div className="flex justify-center">
                         <img src="/logo.png" alt="CryptoForense" className="h-12 w-auto sm:h-14" width={180} height={48} />
