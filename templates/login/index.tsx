@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { loginFormSchema, type LoginFormData } from '@/lib/schemas/login.schema';
+import { LoginCoinsVault } from '@/components/login/LoginCoinsVault';
 
 const REDIRECT_DELAY_MS = 500;
 
@@ -160,15 +161,8 @@ export function LoginTemplate() {
                 </div>
             </div>
 
-            <div className="relative hidden min-h-screen overflow-hidden bg-secondary/30 lg:block">
-                <img
-                    src="/login-panel.jpg"
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
-                    onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                    }}
-                />
+            <div className="relative hidden min-h-screen lg:block">
+                <LoginCoinsVault />
             </div>
         </div>
     );

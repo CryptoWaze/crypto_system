@@ -520,3 +520,17 @@
 .flow-track-graph .react-flow__controls button svg {
     fill: currentColor;
 }
+
+@keyframes login-coin-fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 0.85;
+    }
+    100% {
+        transform: translateY(0) rotate(360deg);
+        opacity: 0.95;
+    }
+}
+.login-coin-falling {
+    animation: login-coin-fall linear both;
+}
