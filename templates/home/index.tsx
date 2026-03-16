@@ -26,7 +26,7 @@ export function HomeTemplate() {
                         <Link href="/dashboard/rastreio/novo">AutoTrack</Link>
                     </Button>
                     <div className="mx-1 h-6 w-px bg-border" aria-hidden />
-                    <Button size="sm" asChild className="h-10 rounded-[6px] bg-primary px-3 text-primary-foreground hover:bg-primary/90 sm:px-4">
+                    <Button size="sm" asChild className="h-10 rounded-[6px] bg-primary px-3 text-white hover:bg-primary/90 sm:px-4">
                         <Link href="/login">Entrar</Link>
                     </Button>
                 </nav>

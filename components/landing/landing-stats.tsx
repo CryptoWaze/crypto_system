@@ -16,10 +16,7 @@ export function LandingStats() {
     return (
         <section
             ref={ref}
-            className={cn(
-                'landing-animate-on-scroll relative bg-background/50 landing-section',
-                isInView && 'landing-in-view'
-            )}
+            className={cn('landing-animate-on-scroll relative bg-background/50 landing-section', isInView && 'landing-in-view')}
             aria-labelledby="stats-heading"
         >
             <div className="mx-auto max-w-6xl px-4 sm:px-6">

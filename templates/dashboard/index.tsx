@@ -127,7 +127,7 @@ export function DashboardTemplate() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Button
               size="lg"
-              className="h-11 rounded-[6px] bg-primary px-6 text-primary-foreground hover:bg-primary/90"
+              className="h-11 rounded-[6px] bg-primary px-6 text-white hover:bg-primary/90"
               asChild
             >
               <Link href="/dashboard/rastreio/novo">

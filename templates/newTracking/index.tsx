@@ -284,7 +284,7 @@ export function NewTrackingTemplate() {
                         <Button
                             type="button"
                             onClick={confirmCloseAndCancel}
-                            className="h-10 w-full rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+                            className="h-10 w-full rounded-[6px] bg-primary text-white hover:bg-primary/90 sm:w-auto"
                         >
                             Fechar
                         </Button>

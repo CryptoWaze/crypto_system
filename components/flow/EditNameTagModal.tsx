@@ -127,10 +127,10 @@ export function EditNameTagModal({
                         Cancelar
                     </Button>
                     <Button
-                        type="button"
-                        onClick={handleConfirm}
-                        disabled={!nameTag.trim() || isOverLimit}
-                        className="h-10 w-full rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+                    type="button"
+                    onClick={handleConfirm}
+                    disabled={!nameTag.trim() || isOverLimit}
+                    className="h-10 w-full rounded-[6px] bg-primary text-white hover:bg-primary/90 sm:w-auto"
                     >
                         Confirmar
                     </Button>

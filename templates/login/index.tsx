@@ -135,7 +135,7 @@ export function LoginTemplate() {
 
                         <Button
                             type="submit"
-                            className="mt-6 h-11 w-full rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90"
+                            className="mt-6 h-11 w-full rounded-[6px] bg-primary text-white hover:bg-primary/90"
                             disabled={isLoading}
                         >
                             {isLoading ? (

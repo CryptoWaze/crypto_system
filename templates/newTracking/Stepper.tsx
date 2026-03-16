@@ -29,7 +29,7 @@ export function Stepper({ currentStep }: { currentStep: number }) {
                                     <span
                                         className={cn(
                                             'flex size-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-300 ease-out',
-                                            isHighlighted && 'border-primary bg-primary text-primary-foreground',
+                                            isHighlighted && 'border-primary bg-primary text-white',
                                             !isHighlighted && 'border-muted-foreground/30 bg-muted/30 text-muted-foreground',
                                         )}
                                     >

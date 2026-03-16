@@ -116,7 +116,7 @@ export function FlowTrackTemplate() {
                 </div>
                 <Button
                   onClick={handleSearch}
-                  className="h-11 rounded-lg bg-primary px-6 text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_-4px_var(--glow-blue)]"
+                  className="h-11 rounded-lg bg-primary px-6 text-white hover:bg-primary/90 shadow-[0_0_20px_-4px_var(--glow-blue)]"
                 >
                   Resolver transação
                 </Button>

@@ -47,11 +47,7 @@ export function Step3Resultados({
             <div className="mx-auto">
                 <PageHeader className="mt-5" title="Erro no rastreamento" description={trackingError} />
                 <div className="mt-6 flex flex-wrap gap-2">
-                    <Button
-                        type="button"
-                        onClick={onNovoRastreamento}
-                        className="rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
+                    <Button type="button" onClick={onNovoRastreamento} className="rounded-[6px] bg-primary text-white hover:bg-primary/90">
                         <RotateCcw className="h-4 w-4" aria-hidden />
                         Novo rastreamento
                     </Button>
@@ -118,7 +114,7 @@ export function Step3Resultados({
                 }
             />
             <div className="mt-6 flex flex-wrap gap-2">
-                <Button type="button" onClick={onNovoRastreamento} className="rounded-[6px] bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button type="button" onClick={onNovoRastreamento} className="rounded-[6px] bg-primary text-white hover:bg-primary/90">
                     <RotateCcw className=" h-4 w-4" aria-hidden />
                     Novo rastreamento
                 </Button>

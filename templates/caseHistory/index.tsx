@@ -187,7 +187,7 @@ export function CaseHistoryTemplate() {
                 <Button
                     type="button"
                     onClick={() => setReportsModalOpen(true)}
-                    className="absolute top-4 right-4 z-10 h-10 rounded-[6px] bg-primary px-4 shadow-lg transition-shadow hover:bg-primary/90 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-ring"
+                    className="absolute top-4 right-4 z-10 h-10 rounded-[6px] bg-primary px-4 text-white shadow-lg transition-shadow hover:bg-primary/90 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="Abrir relatórios do caso"
                 >
                     <FileText className="h-5 w-5 shrink-0" aria-hidden />
