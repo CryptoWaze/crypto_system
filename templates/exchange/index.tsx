@@ -118,7 +118,7 @@ export function ExchangeTemplate({ slug }: ExchangeTemplateProps) {
                     <h1 className="font-display text-2xl font-semibold tracking-[0.22em] text-foreground">
                       {name}
                     </h1>
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-black shadow-[0_0_14px_rgba(59,130,246,0.8)]">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-white shadow-[0_0_14px_rgba(59,130,246,0.8)]">
                       ✓
                     </span>
                   </div>
@@ -154,7 +154,7 @@ export function ExchangeTemplate({ slug }: ExchangeTemplateProps) {
                 >
                   Seguir exchange
                 </Button>
-                <Button className="h-9 rounded-[6px] bg-primary px-4 text-[11px] font-semibold tracking-[0.18em] text-primary-foreground shadow-[0_0_26px_-4px_var(--glow-blue)] hover:bg-primary/90">
+                <Button className="h-9 rounded-[6px] bg-primary px-4 text-[11px] font-semibold tracking-[0.18em] text-white shadow-[0_0_26px_-4px_var(--glow-blue)] hover:bg-primary/90">
                   Ver wallets
                 </Button>
               </div>
