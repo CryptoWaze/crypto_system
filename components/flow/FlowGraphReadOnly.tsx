@@ -8,6 +8,7 @@ import type { FlowGraphWithTimestamps } from '@/lib/utils/flow-track-graph';
 import { flowGraphToReactFlow } from './utils/flowGraphToReactFlow';
 import { FlowTrackNode } from './FlowTrackNode';
 import { FlowTrackBezierEdge } from './FlowTrackBezierEdge';
+import { FitViewOnce } from './FitViewOnce';
 
 const NODE_TYPES = { flowTrackNode: FlowTrackNode };
 const EDGE_TYPES = { flowTrackBezier: FlowTrackBezierEdge };
@@ -18,6 +19,8 @@ export type FlowGraphReadOnlyProps = {
     caseName?: string | null;
     endpointExchangeName?: string | null;
     endpointHotWalletLabel?: string | null;
+    fitViewOnMount?: boolean;
+    fillContainer?: boolean;
 };
 
 const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
@@ -26,6 +29,8 @@ const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
     caseName,
     endpointExchangeName,
     endpointHotWalletLabel,
+    fitViewOnMount = false,
+    fillContainer = false,
 }: FlowGraphReadOnlyProps) {
     const dataRef = useRef(flowGraphToReactFlow(graph, caseName, endpointExchangeName, endpointHotWalletLabel));
     const { nodes, edges } = dataRef.current;
@@ -36,7 +41,7 @@ const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
                 backgroundColor: 'var(--background)',
                 width: '100%',
                 height: '100%',
-                minHeight: 480,
+                minHeight: fillContainer ? 0 : 480,
             }}
         >
             <ReactFlow
@@ -52,6 +57,7 @@ const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
                 edgeTypes={EDGE_TYPES}
                 proOptions={{ hideAttribution: true }}
             >
+                {fitViewOnMount ? <FitViewOnce /> : null}
                 <Background gap={16} size={1} color="rgba(255,255,255,0.06)" />
                 <Controls showInteractive={false} position="bottom-right" className="flow-track-controls" />
             </ReactFlow>

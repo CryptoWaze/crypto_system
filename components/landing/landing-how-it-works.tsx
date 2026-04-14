@@ -2,6 +2,7 @@
 
 import { FileInput, GitBranch, FileBarChart } from 'lucide-react';
 import { LandingAnimateOnScroll } from './landing-animate-on-scroll';
+import { LandingHowItWorksDemoGraph } from './landing-how-it-works-demo-graph';
 
 const STEPS = [
     {
@@ -28,7 +29,7 @@ export function LandingHowItWorks() {
     return (
         <section
             id="como-funciona"
-            className="relative border-y border-border/60 bg-background/50 landing-section"
+            className="relative border-y border-border/60 bg-background/50 landing-section pb-4 sm:pb-5"
             aria-labelledby="how-heading"
         >
             <LandingAnimateOnScroll className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -52,6 +53,7 @@ export function LandingHowItWorks() {
                         </li>
                     ))}
                 </ol>
+                <LandingHowItWorksDemoGraph />
             </LandingAnimateOnScroll>
         </section>
     );

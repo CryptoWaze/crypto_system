@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { GalaxyBackground } from './galaxy-background';
+import { HeroBackgroundGraphs } from './hero-background-graphs';
 
 export function Hero() {
     return (
@@ -10,6 +11,7 @@ export function Hero() {
         >
             <GalaxyBackground />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(74,126,217,0.05),transparent_50%)]" aria-hidden />
+            <HeroBackgroundGraphs />
             <div className="relative z-10 mx-auto max-w-4xl text-center">
                 <div className="landing-animate-in landing-animate-in-delay-1 flex justify-center">
                     <img src="/logo.png" alt="CryptoForense" className="h-20 w-auto sm:h-24 md:h-28" width={360} height={120} />
