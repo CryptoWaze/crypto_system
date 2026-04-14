@@ -28,7 +28,7 @@ export function ExchangeTemplate({ slug }: ExchangeTemplateProps) {
 
   if (!mounted || status === 'loading') {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background">
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#090b12]">
         <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
         <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
       </div>
@@ -40,11 +40,12 @@ export function ExchangeTemplate({ slug }: ExchangeTemplateProps) {
   const name = (slug ?? 'binance').toUpperCase();
 
   return (
-    <div className="min-h-screen w-full overflow-auto bg-background">
+    <div className="relative min-h-screen w-full overflow-auto bg-[#090b12]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_10%,rgba(74,126,217,0.14),transparent_58%),radial-gradient(ellipse_70%_55%_at_80%_90%,rgba(99,102,241,0.12),transparent_62%)]" />
       <AppHeader />
       <div className="h-14 shrink-0" aria-hidden />
 
-      <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-6xl flex-col gap-6 px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-6xl flex-col gap-6 px-4 pb-12 pt-6 sm:px-6 lg:px-8">
         {/* Ticker mockado */}
         <section className="relative overflow-hidden rounded-[6px] border border-border bg-card/80 px-4 py-2">
           <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-card to-transparent" />

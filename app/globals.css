@@ -125,11 +125,59 @@
 @layer base {
     * {
         @apply border-border outline-ring/50;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(74, 126, 217, 0.5) rgba(255, 255, 255, 0.04);
+    }
+    html {
+        overflow-x: hidden;
     }
     body {
+        overflow-x: hidden;
         background: var(--background);
         background-image: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(74, 126, 217, 0.05), transparent 50%);
         color: var(--foreground);
+    }
+    *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    *::-webkit-scrollbar-button {
+        width: 0;
+        height: 0;
+        display: none;
+        background: transparent;
+    }
+    *::-webkit-scrollbar-button:single-button {
+        width: 0;
+        height: 0;
+        display: none;
+        background: transparent;
+    }
+    *::-webkit-scrollbar-button:vertical:decrement,
+    *::-webkit-scrollbar-button:vertical:increment,
+    *::-webkit-scrollbar-button:horizontal:decrement,
+    *::-webkit-scrollbar-button:horizontal:increment {
+        width: 0;
+        height: 0;
+        display: none;
+        background: transparent;
+        border: 0;
+    }
+    *::-webkit-scrollbar-track {
+        background: linear-gradient(180deg, rgba(10, 10, 12, 0.9), rgba(16, 16, 20, 0.9));
+        border-left: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    *::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        border: 2px solid rgba(10, 10, 12, 0.95);
+        background: linear-gradient(180deg, rgba(74, 126, 217, 0.78), rgba(74, 126, 217, 0.4));
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 16px -8px rgba(74, 126, 217, 0.65);
+    }
+    *::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, rgba(96, 152, 247, 0.86), rgba(74, 126, 217, 0.55));
+    }
+    *::-webkit-scrollbar-thumb:active {
+        background: linear-gradient(180deg, rgba(120, 175, 255, 0.9), rgba(74, 126, 217, 0.6));
     }
     .font-serif {
         font-family: var(--font-serif-display, Georgia), 'Times New Roman', serif;
@@ -138,15 +186,37 @@
         max-width: 70ch;
         line-height: 1.6;
     }
-    .landing-section {
-        padding-top: 5rem;
-        padding-bottom: 5rem;
+    .landing-home-content > * + * {
+        margin-top: 0;
     }
-    @media (min-width: 640px) {
-        .landing-section {
-            padding-top: 6rem;
-            padding-bottom: 6rem;
-        }
+    .landing-home-content > section,
+    .landing-home-content > footer {
+        scroll-margin-top: 5.5rem;
+    }
+    .landing-section {
+        position: relative;
+        isolation: isolate;
+        padding-top: clamp(5.5rem, 10vw, 8rem);
+        padding-bottom: clamp(5.5rem, 10vw, 8rem);
+    }
+    .landing-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(54rem, 84%);
+        height: 1px;
+        pointer-events: none;
+        z-index: 1;
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(74, 126, 217, 0.22) 28%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(74, 126, 217, 0.22) 72%,
+            transparent 100%
+        );
     }
     .landing-h1 {
         font-family: var(--font-serif-display, Georgia), 'Times New Roman', serif;
@@ -164,14 +234,15 @@
     }
     .landing-h2 {
         font-family: var(--font-serif-display, Georgia), 'Times New Roman', serif;
-        font-size: 1.5rem;
+        font-size: 1.875rem;
         font-weight: 600;
-        letter-spacing: -0.02em;
-        line-height: 1.25;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
         color: var(--foreground);
+        margin-top: 1.25rem;
     }
     @media (min-width: 640px) {
-        .landing-h2 { font-size: 1.875rem; }
+        .landing-h2 { font-size: 2.25rem; }
     }
     .landing-body {
         font-size: 1rem;
@@ -183,7 +254,7 @@
     }
     .landing-body-sm {
         font-size: 0.875rem;
-        line-height: 1.5;
+        line-height: 1.55;
         color: var(--muted-foreground);
     }
 }
@@ -204,6 +275,198 @@
 .divider-futuristic {
     background: linear-gradient(90deg, transparent, var(--edge-blue), transparent);
     opacity: 0.6;
+}
+
+.landing-card-modern {
+    background: rgba(26, 26, 29, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(4px);
+    transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+.landing-card-modern:hover {
+    border-color: rgba(74, 126, 217, 0.18);
+    background: rgba(26, 26, 29, 0.7);
+    box-shadow: 0 0 32px -8px rgba(74, 126, 217, 0.08);
+}
+
+@keyframes capability-orb-float {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.62;
+    }
+    50% {
+        transform: translate3d(-14px, 10px, 0) scale(1.08);
+        opacity: 0.78;
+    }
+}
+
+@keyframes capability-shimmer-rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.capability-bento-card {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 16px 44px -28px rgba(0, 0, 0, 0.9);
+}
+
+.capability-bento-orb {
+    background: radial-gradient(circle at 30% 35%, var(--cap-tint), transparent 68%);
+    animation: capability-orb-float 8.2s ease-in-out infinite;
+}
+
+.capability-bento-shimmer {
+    overflow: hidden;
+}
+
+.capability-bento-shimmer::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: conic-gradient(
+        from 180deg,
+        transparent 0deg,
+        rgba(74, 126, 217, 0.24) 72deg,
+        transparent 160deg,
+        rgba(147, 197, 253, 0.2) 230deg,
+        transparent 360deg
+    );
+    animation: capability-shimmer-rotate 6.8s linear infinite;
+}
+
+@keyframes chain-orb-drift {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translate3d(-8px, 6px, 0) scale(1.08);
+        opacity: 0.78;
+    }
+}
+
+@keyframes chains-beam-breathe {
+    0%,
+    100% {
+        opacity: 0.34;
+        transform: translate3d(-50%, -50%, 0) scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: translate3d(-50%, -50%, 0) scale(1.06);
+    }
+}
+
+.chains-life-beam {
+    background: radial-gradient(ellipse at center, rgba(74, 126, 217, 0.22), rgba(74, 126, 217, 0.05) 52%, transparent 72%);
+    animation: chains-beam-breathe 6.2s ease-in-out infinite;
+}
+
+.chains-life-grid {
+    background: linear-gradient(90deg, transparent, rgba(74, 126, 217, 0.35), transparent);
+}
+
+.chain-pill-live {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 8px 24px -18px rgba(0, 0, 0, 0.9);
+}
+
+.chain-pill-orb {
+    background: radial-gradient(circle at 35% 35%, var(--chain-tone), transparent 72%);
+    animation: chain-orb-drift 3.8s ease-in-out infinite;
+}
+
+@keyframes chains-network-pulse {
+    0%,
+    100% {
+        opacity: 0.32;
+    }
+    50% {
+        opacity: 0.78;
+    }
+}
+
+.chains-network-link line {
+    stroke: rgba(74, 126, 217, 0.42);
+    stroke-width: 0.32;
+    stroke-linecap: round;
+    animation: chains-network-pulse 4.2s ease-in-out infinite;
+}
+
+.chains-network-core {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 44px -14px rgba(74, 126, 217, 0.68);
+}
+
+.chains-network-node {
+    position: absolute;
+    overflow: hidden;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(18, 19, 26, 0.75);
+    padding: 0.62rem 0.9rem;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: rgba(229, 231, 235, 0.78);
+    backdrop-filter: blur(4px);
+    transition: transform 0.28s ease, border-color 0.28s ease, color 0.28s ease;
+}
+
+.chains-network-node:hover {
+    transform: translateY(-2px);
+    border-color: rgba(74, 126, 217, 0.35);
+    color: rgba(229, 231, 235, 0.98);
+}
+
+@keyframes audience-orb-drift {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.45;
+    }
+    50% {
+        transform: translate3d(6px, -6px, 0) scale(1.12);
+        opacity: 0.72;
+    }
+}
+
+@keyframes audience-line-pulse {
+    0%,
+    100% {
+        opacity: 0.35;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.audience-flow-line {
+    background: linear-gradient(180deg, rgba(74, 126, 217, 0.5), rgba(74, 126, 217, 0.05));
+    animation: audience-line-pulse 3.6s ease-in-out infinite;
+}
+
+.audience-flow-node {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 0 30px -10px rgba(74, 126, 217, 0.6);
+}
+
+.audience-flow-orb {
+    background: radial-gradient(circle at 35% 35%, var(--audience-tone), transparent 72%);
+    animation: audience-orb-drift 4.6s ease-in-out infinite;
+}
+
+.footer-link-modern {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.9rem;
+    line-height: 1.35;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+.footer-link-modern:hover {
+    color: rgba(96, 152, 247, 0.95);
+    transform: translateX(2px);
 }
 
 @keyframes galaxy-wander-1 {
@@ -352,12 +615,21 @@
 .landing-animate-on-scroll.landing-in-view .landing-stagger > *:nth-child(8) { animation-delay: 0.75s; }
 .landing-animate-on-scroll.landing-in-view .landing-stagger > *:nth-child(9) { animation-delay: 0.85s; }
 
-@keyframes chains-carousel-scroll {
+@keyframes chains-carousel-scroll-a {
     0% {
         transform: translateX(0);
     }
     100% {
-        transform: translateX(-50%);
+        transform: translateX(-100%);
+    }
+}
+
+@keyframes chains-carousel-scroll-b {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(0);
     }
 }
 
@@ -371,9 +643,27 @@
     }
 }
 
+.chains-carousel-marquee {
+    position: relative;
+    min-width: 100%;
+}
+
 .chains-carousel-track {
+    display: flex;
+    width: max-content;
+    flex-shrink: 0;
     will-change: transform;
-    animation: chains-carousel-scroll 40s linear infinite;
+}
+
+.chains-carousel-track-a {
+    animation: chains-carousel-scroll-a 42s linear infinite;
+}
+
+.chains-carousel-track-b {
+    position: absolute;
+    top: 0;
+    left: 0;
+    animation: chains-carousel-scroll-b 42s linear infinite;
 }
 
 .chains-carousel-item {

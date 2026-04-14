@@ -21,6 +21,8 @@ export type FlowGraphReadOnlyProps = {
     endpointHotWalletLabel?: string | null;
     fitViewOnMount?: boolean;
     fillContainer?: boolean;
+    preventScrolling?: boolean;
+    zoomOnScroll?: boolean;
 };
 
 const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
@@ -31,6 +33,8 @@ const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
     endpointHotWalletLabel,
     fitViewOnMount = false,
     fillContainer = false,
+    preventScrolling = true,
+    zoomOnScroll = true,
 }: FlowGraphReadOnlyProps) {
     const dataRef = useRef(flowGraphToReactFlow(graph, caseName, endpointExchangeName, endpointHotWalletLabel));
     const { nodes, edges } = dataRef.current;
@@ -38,7 +42,8 @@ const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
         <div
             className={`flow-track-graph ${className ?? 'rounded-xl'}`}
             style={{
-                backgroundColor: 'var(--background)',
+                background:
+                    'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(74,126,217,0.14), transparent 58%), radial-gradient(ellipse 70% 55% at 80% 90%, rgba(99,102,241,0.1), transparent 62%), linear-gradient(180deg, rgba(10,12,18,0.96), rgba(8,9,14,0.98))',
                 width: '100%',
                 height: '100%',
                 minHeight: fillContainer ? 0 : 480,
@@ -52,13 +57,15 @@ const FlowGraphReadOnlyComponent = memo(function FlowGraphReadOnlyComponent({
                 elementsSelectable={false}
                 minZoom={0.2}
                 maxZoom={1.5}
+                zoomOnScroll={zoomOnScroll}
+                preventScrolling={preventScrolling}
                 defaultEdgeOptions={{ type: 'flowTrackBezier' }}
                 nodeTypes={NODE_TYPES}
                 edgeTypes={EDGE_TYPES}
                 proOptions={{ hideAttribution: true }}
             >
                 {fitViewOnMount ? <FitViewOnce /> : null}
-                <Background gap={16} size={1} color="rgba(255,255,255,0.06)" />
+                <Background gap={16} size={1} color="rgba(74,126,217,0.14)" />
                 <Controls showInteractive={false} position="bottom-right" className="flow-track-controls" />
             </ReactFlow>
         </div>

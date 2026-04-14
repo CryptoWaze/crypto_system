@@ -35,17 +35,17 @@ export function DashboardStats({ totalCases, totalAmount, casesThisMonth, totalS
             {stats.map((stat, i) => (
                 <div
                     key={i}
-                    className="rounded-xl border border-border/60 bg-card/40 p-4 transition-colors hover:border-border hover:bg-card/60"
+                    className="rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(17,19,26,0.82),rgba(10,11,16,0.86))] p-4 transition-all duration-200 hover:border-primary/25 hover:bg-[linear-gradient(180deg,rgba(20,22,32,0.88),rgba(11,12,18,0.92))]"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-secondary/50 text-primary">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/4 text-primary">
                             <stat.icon className="h-5 w-5" aria-hidden />
                         </div>
                         <div className="min-w-0">
                             <p className="truncate text-2xl font-semibold tabular-nums text-foreground">
                                 {stat.value}
                             </p>
-                            <p className="text-xs text-muted-foreground">{stat.label}</p>
+                            <p className="text-xs text-white/62">{stat.label}</p>
                         </div>
                     </div>
                 </div>

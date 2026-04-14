@@ -150,7 +150,8 @@ export function FlowGraphViewInteractive({
                 <div
                     className="flow-track-graph absolute inset-0 rounded-xl"
                     style={{
-                        backgroundColor: 'var(--background)',
+                        background:
+                            'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(74,126,217,0.14), transparent 58%), radial-gradient(ellipse 70% 55% at 80% 90%, rgba(99,102,241,0.1), transparent 62%), linear-gradient(180deg, rgba(10,12,18,0.96), rgba(8,9,14,0.98))',
                         minHeight: 480,
                     }}
                 >
@@ -171,7 +172,7 @@ export function FlowGraphViewInteractive({
                         proOptions={{ hideAttribution: true }}
                     >
                         <FitViewOnce />
-                        <Background gap={16} size={1} color="rgba(255,255,255,0.06)" />
+                        <Background gap={16} size={1} color="rgba(74,126,217,0.14)" />
                         <Controls showInteractive={false} position="bottom-right" className="flow-track-controls" />
                         <Panel position="bottom-right" className="flow-track-edge-style-panel">
                             <div className="mr-10">

@@ -19,7 +19,7 @@ const VERTICAL_PADDING = 60;
 const INITIAL_FALL_SPEED = 0.9;
 const FAST_PHASE_MS = 5000;
 const FAST_PHASE_TIME_SCALE = 3;
-const TRAY_HEIGHT_PX = 200;
+const TRAY_HEIGHT_PX = 170;
 
 function seed(step: number) {
   const x = Math.sin(step * 12.9898) * 43758.5453;
@@ -319,9 +319,9 @@ export function LoginCoinsVault() {
 
   if (loading || tokens.length === 0) {
     return (
-      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-black">
+      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-transparent p-4 lg:p-6">
         <div
-          className="absolute inset-4 flex items-center justify-center rounded-2xl border-2 border-white/10 bg-black/20 backdrop-blur-sm lg:inset-6"
+          className="relative flex h-[min(82vh,44rem)] w-full max-w-216 items-center justify-center rounded-2xl border-2 border-white/10 bg-black/20 backdrop-blur-sm"
           style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}
         >
           {loading && (
@@ -333,9 +333,9 @@ export function LoginCoinsVault() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full overflow-hidden bg-black">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-transparent p-4 lg:p-6">
       <div
-        className="absolute inset-4 flex flex-col rounded-2xl border-2 border-white/10 bg-black/20 shadow-[inset_0_0_80px_rgba(0,0,0,0.2)] backdrop-blur-sm lg:inset-6"
+        className="relative flex h-[min(82vh,44rem)] w-full max-w-216 flex-col rounded-2xl border-2 border-white/10 bg-black/20 shadow-[inset_0_0_80px_rgba(0,0,0,0.2)] backdrop-blur-sm"
         style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}
       >
         <div
@@ -350,7 +350,7 @@ export function LoginCoinsVault() {
           />
         </div>
         <div
-          className="relative flex-shrink-0 w-full rounded-b-xl border-t border-white/10 bg-zinc-700/90"
+          className="relative shrink-0 w-full rounded-b-xl border-t border-white/10 bg-zinc-700/90"
           style={{ height: TRAY_HEIGHT_PX, boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.25)' }}
         >
           <img
@@ -361,7 +361,7 @@ export function LoginCoinsVault() {
             height={47}
           />
           <div
-            className="absolute right-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-2 border-zinc-500/90 bg-gradient-to-b from-zinc-500 to-zinc-700 pointer-events-none flex items-center justify-center overflow-hidden"
+            className="absolute right-8 top-1/2 h-20 w-20 -translate-y-1/2 pointer-events-none flex items-center justify-center overflow-hidden rounded-full border-2 border-zinc-500/90 bg-linear-to-b from-zinc-500 to-zinc-700"
             style={{ boxShadow: 'inset 0 6px 16px rgba(0,0,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.2)' }}
             aria-hidden
           >
@@ -395,9 +395,9 @@ export function LoginCoinsVault() {
               spawnCoinInExitRef.current?.();
             }}
             disabled={activeExitCoin !== null}
-            className="absolute left-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-2 border-zinc-500/80 disabled:opacity-50 disabled:pointer-events-none bg-gradient-to-br from-zinc-400 to-zinc-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3),0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-transform duration-[1250ms] ease-out"
+            className="absolute left-8 top-1/2 h-20 w-20 -translate-y-1/2 disabled:pointer-events-none disabled:opacity-50 flex items-center justify-center rounded-full border-2 border-zinc-500/80 bg-linear-to-br from-zinc-400 to-zinc-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3),0_4px_8px_rgba(0,0,0,0.4)] outline-none transition-transform duration-1250 ease-out focus-visible:ring-2 focus-visible:ring-primary/50"
             style={{ transform: `rotate(${knobRotation}deg)` }}
-            aria-label="Manivela"
+            aria-label="Manivela para destacar moeda"
           >
             <span
               className="w-4 h-5 rounded-sm bg-zinc-500/90 -translate-y-1 shadow-sm"
@@ -411,9 +411,9 @@ export function LoginCoinsVault() {
               setPurpleButtonRotation((r) => r + 720);
               spawnRewardCoinRef.current?.();
             }}
-            className="absolute left-[7.5rem] top-[calc(50%+1.25rem)] w-9 h-9 rounded-full border-2 border-purple-500/80 bg-gradient-to-br from-purple-400 to-purple-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_2px_6px_rgba(0,0,0,0.3)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50 transition-transform duration-[1250ms] ease-out"
+            className="absolute left-30 top-[calc(50%+1.25rem)] h-9 w-9 flex items-center justify-center rounded-full border-2 border-purple-500/80 bg-linear-to-br from-purple-400 to-purple-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_2px_6px_rgba(0,0,0,0.3)] outline-none transition-transform duration-1250 ease-out focus-visible:ring-2 focus-visible:ring-purple-400/50"
             style={{ transform: `rotate(${purpleButtonRotation}deg)` }}
-            aria-label="Girar e soltar bolinha"
+            aria-label="Botão para liberar moedas extras"
           >
             <span
               className="w-2 h-2.5 rounded-sm bg-purple-500/90 -translate-y-0.5 shadow-sm"

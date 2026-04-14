@@ -60,7 +60,7 @@ export function FlowTrackTemplate() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#090b12]">
         <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
         <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
       </div>
@@ -69,12 +69,13 @@ export function FlowTrackTemplate() {
   if (status === 'unauthenticated') return null;
 
   return (
-    <div className="min-h-screen w-full overflow-auto bg-background">
+    <div className="relative min-h-screen w-full overflow-auto bg-[#090b12]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_10%,rgba(74,126,217,0.14),transparent_58%),radial-gradient(ellipse_70%_55%_at_80%_90%,rgba(99,102,241,0.12),transparent_62%)]" />
       <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
       <div className="h-14 shrink-0" aria-hidden />
 
       {view === 'input' && (
-        <main className="relative flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-16">
+        <main className="relative z-10 flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-16">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(91,141,239,0.05),transparent_45%)]" aria-hidden />
           <div className="relative z-10 mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card/60 px-8 py-10 text-center shadow-[0_0_40px_-12px_var(--glow-blue)]">
             <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
@@ -132,7 +133,7 @@ export function FlowTrackTemplate() {
       )}
 
       {view === 'loading' && (
-        <main className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-16">
+        <main className="relative z-10 flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-16">
           <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
           <p className="mt-4 text-sm text-muted-foreground">Buscando transação nas chains...</p>
         </main>

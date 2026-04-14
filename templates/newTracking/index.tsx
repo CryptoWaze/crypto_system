@@ -189,7 +189,7 @@ export function NewTrackingTemplate() {
 
     if (status === 'loading') {
         return (
-            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
+            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#090b12]">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
                 <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
             </div>
@@ -198,10 +198,11 @@ export function NewTrackingTemplate() {
     if (status === 'unauthenticated') return null;
 
     return (
-        <div className="min-h-screen w-full overflow-auto bg-background">
+        <div className="relative min-h-screen w-full overflow-auto bg-[#090b12]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_10%,rgba(74,126,217,0.14),transparent_58%),radial-gradient(ellipse_70%_55%_at_80%_90%,rgba(99,102,241,0.12),transparent_62%)]" />
             <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
             <div className="h-14 shrink-0" aria-hidden />
-            <main className="mx-auto min-h-[calc(100vh-7rem)] max-w-4xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10 sm:pb-20">
+            <main className="relative mx-auto min-h-[calc(100vh-7rem)] max-w-4xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10 sm:pb-20">
                 <div className="w-full py-4 mx-auto">
                     <Stepper currentStep={currentStep} />
                 </div>
@@ -245,7 +246,7 @@ export function NewTrackingTemplate() {
             </main>
 
             {currentStep === 1 && (
-                <footer className="fixed inset-x-0 bottom-0 z-10 flex h-14 w-full items-center justify-center border-t border-border/80 bg-background px-4 sm:px-6">
+                <footer className="fixed inset-x-0 bottom-0 z-10 flex h-14 w-full items-center justify-center border-t border-white/10 bg-[#090b12]/95 px-4 backdrop-blur-sm sm:px-6">
                     <div className="mx-auto flex w-full flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-2">
                         <Button type="button" variant="outline" onClick={handleCancelClick} className="h-10 w-full rounded-[6px] sm:w-auto">
                             Cancelar

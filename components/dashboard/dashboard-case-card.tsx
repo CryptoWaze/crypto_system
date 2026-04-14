@@ -42,17 +42,17 @@ export function DashboardCaseCard({ item, isMock }: DashboardCaseCardProps) {
         <Link
             href={href}
             onClick={handleClick}
-            className="group flex flex-col rounded-xl border border-border/60 bg-card/50 p-5 transition-all hover:border-primary/40 hover:bg-card/80 hover:shadow-[0_0_20px_-8px_var(--glow-blue)]"
+            className="group flex flex-col rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(17,19,26,0.82),rgba(10,11,16,0.9))] p-5 transition-all duration-200 hover:border-primary/30 hover:shadow-[0_0_24px_-10px_var(--glow-blue)]"
         >
             <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-secondary/50 text-primary">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-white/4 text-primary">
                     <FolderOpen className="h-6 w-6" aria-hidden />
                 </div>
                 <div className="min-w-0 flex-1">
                     <h3 className="truncate font-semibold text-foreground group-hover:text-primary">
                         {item.name || 'Sem nome'}
                     </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-white/60">
                         {formatDate(item.createdAt)}
                         {count > 0 && (
                             <span className="ml-2">
@@ -61,7 +61,7 @@ export function DashboardCaseCard({ item, isMock }: DashboardCaseCardProps) {
                         )}
                     </p>
                     <p className="mt-2 text-lg font-semibold tabular-nums text-foreground">
-                        {item.amountDisplay} <span className="text-sm font-normal text-muted-foreground">USD</span>
+                        {item.amountDisplay} <span className="text-sm font-normal text-white/50">USD</span>
                     </p>
                 </div>
                 <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden />
