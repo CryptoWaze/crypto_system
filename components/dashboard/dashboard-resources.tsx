@@ -38,35 +38,35 @@ const RESOURCES = [
 export function DashboardResources() {
     return (
         <div className="space-y-6">
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <div className="rounded-xl border border-primary/20 bg-primary/8 p-4">
                 <div className="flex gap-3">
                     <Lightbulb className="h-5 w-5 shrink-0 text-primary" aria-hidden />
                     <div>
                         <h3 className="text-sm font-semibold text-foreground">{TIP.title}</h3>
-                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{TIP.text}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-white/62">{TIP.text}</p>
                     </div>
                 </div>
             </div>
-            <div className="rounded-xl border border-border/60 bg-card/30 p-4">
+            <div className="rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(17,19,26,0.82),rgba(10,11,16,0.9))] p-4">
                 <h3 className="text-sm font-semibold text-foreground">Recursos</h3>
-            <ul className="mt-3 space-y-2">
-                {RESOURCES.map((item, i) => (
-                    <li key={i}>
-                        <Link
-                            href={item.href}
-                            className="flex items-start gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                        >
-                            <item.icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                            <div>
-                                <span className="font-medium text-foreground hover:text-primary hover:underline">
-                                    {item.title}
-                                </span>
-                                <p className="text-xs text-muted-foreground">{item.description}</p>
-                            </div>
-                        </Link>
-                    </li>
-                ))}
-            </ul>
+                <ul className="mt-3 space-y-2">
+                    {RESOURCES.map((item, i) => (
+                        <li key={i}>
+                            <Link
+                                href={item.href}
+                                className="flex items-start gap-3 rounded-lg border border-transparent px-3 py-2 text-sm transition-colors hover:border-white/10 hover:bg-white/5"
+                            >
+                                <item.icon className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" aria-hidden />
+                                <div>
+                                    <span className="font-medium text-foreground hover:text-primary hover:underline">
+                                        {item.title}
+                                    </span>
+                                    <p className="text-xs text-white/58">{item.description}</p>
+                                </div>
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
             </div>
         </div>
     );

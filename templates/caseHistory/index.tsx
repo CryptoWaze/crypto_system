@@ -102,7 +102,7 @@ export function CaseHistoryTemplate() {
 
     if (status === 'loading') {
         return (
-            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
+            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#090b12]">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
                 <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
             </div>
@@ -112,7 +112,7 @@ export function CaseHistoryTemplate() {
 
     if (!ready) {
         return (
-            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
+            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#090b12]">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
                 <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
             </div>
@@ -121,10 +121,11 @@ export function CaseHistoryTemplate() {
 
     if (error) {
         return (
-            <div className="flex min-h-screen w-full flex-col overflow-auto bg-background">
+            <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-[#090b12]">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_10%,rgba(74,126,217,0.14),transparent_58%),radial-gradient(ellipse_70%_55%_at_80%_90%,rgba(99,102,241,0.12),transparent_62%)]" />
                 <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
                 <div className="h-14 shrink-0" aria-hidden />
-                <main className="flex flex-1 flex-col items-center justify-center px-4 py-8">
+                <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-8">
                     <div
                         className="flex w-full max-w-md flex-col items-center rounded-2xl border border-border bg-card px-8 py-10 text-center shadow-lg"
                         role="alert"
@@ -167,13 +168,14 @@ export function CaseHistoryTemplate() {
     ];
 
     return (
-        <div className="min-h-screen w-full overflow-auto bg-background">
+        <div className="relative min-h-screen w-full overflow-auto bg-[#090b12]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_10%,rgba(74,126,217,0.14),transparent_58%),radial-gradient(ellipse_70%_55%_at_80%_90%,rgba(99,102,241,0.12),transparent_62%)]" />
             <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
             <div className="h-14 shrink-0" aria-hidden />
-            <div className="flex h-12 shrink-0 items-center border-b border-border/60 bg-background px-4 sm:px-6">
+            <div className="relative z-10 flex h-12 shrink-0 items-center border-b border-white/10 bg-[#090b12]/95 px-4 backdrop-blur-sm sm:px-6">
                 <DashboardBreadcrumb items={breadcrumbItems} />
             </div>
-            <main className="relative h-[calc(100vh-3.5rem-3rem)] w-full min-h-0">
+            <main className="relative z-10 h-[calc(100vh-3.5rem-3rem)] w-full min-h-0">
                 <FlowGraphView
                     graph={graphData}
                     className="h-full w-full"

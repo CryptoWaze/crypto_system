@@ -1,21 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/lib/toast-context';
+import { Loader2 } from 'lucide-react';
+import { AppHeader } from '@/components/common/appHeader';
 
 const CONTACT_EMAIL = 'contato@cryptoforense.com.br';
 
 export function ContatoTemplate() {
+    const router = useRouter();
+    const { status } = useSession();
     const toast = useToast();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (status === 'unauthenticated') router.replace('/login');
+    }, [status, router]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,9 +39,22 @@ export function ContatoTemplate() {
         setIsSubmitting(false);
     };
 
+    if (status === 'loading') {
+        return (
+            <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#090b12]">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
+                <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
+            </div>
+        );
+    }
+    if (status === 'unauthenticated') return null;
+
     return (
-        <main className="min-h-screen px-4 py-16 sm:px-6">
-            <div className="mx-auto max-w-lg">
+        <div className="relative min-h-screen w-full overflow-auto bg-[#090b12]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_10%,rgba(74,126,217,0.14),transparent_58%),radial-gradient(ellipse_70%_55%_at_80%_90%,rgba(99,102,241,0.12),transparent_62%)]" />
+            <AppHeader />
+            <div className="h-14 shrink-0" aria-hidden />
+            <main className="relative mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
                 <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                     Contato
                 </h1>
@@ -93,7 +116,7 @@ export function ContatoTemplate() {
                     </a>
                     .
                 </p>
-            </div>
-        </main>
+            </main>
+        </div>
     );
 }

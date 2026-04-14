@@ -122,17 +122,17 @@ export function ModalCases({ open, onOpenChange }: MyCasesModalProps) {
             <SheetContent
                 side="right"
                 showClose={false}
-                className="flex h-full w-full min-h-0 flex-col border-l border-border bg-card p-0 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)] sm:max-w-md"
+                    className="flex h-full w-full min-h-0 flex-col border-l border-white/12 bg-[linear-gradient(180deg,rgba(17,19,26,0.96),rgba(10,11,16,0.98))] p-0 shadow-[0_30px_70px_-22px_rgba(0,0,0,0.7)] backdrop-blur-sm sm:max-w-md"
             >
-                <SheetHeader className="flex flex-row items-center justify-between gap-3 border-b border-border px-5 py-4">
+                    <SheetHeader className="flex flex-row items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-[6px] border border-border bg-muted/50 sm:size-10">
-                            <FolderOpen className="size-5 text-muted-foreground sm:size-5" aria-hidden />
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] border border-white/12 bg-white/4 sm:size-10">
+                                <FolderOpen className="size-5 text-primary/80 sm:size-5" aria-hidden />
                         </div>
-                        <SheetTitle className="text-left text-base font-semibold text-foreground sm:text-lg">Meus casos</SheetTitle>
+                            <SheetTitle className="text-left text-base font-semibold text-foreground sm:text-lg">Meus casos</SheetTitle>
                     </div>
                     <SheetClose
-                        className="flex size-10 shrink-0 items-center justify-center rounded-[6px] bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 disabled:pointer-events-none sm:size-10 cursor-pointer"
+                            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-white/10 bg-white/3 text-muted-foreground transition-colors hover:bg-white/8 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:pointer-events-none sm:size-10"
                         aria-label="Fechar"
                     >
                         <X className="size-4 sm:size-5" aria-hidden />
@@ -153,44 +153,48 @@ export function ModalCases({ open, onOpenChange }: MyCasesModalProps) {
                 )}
 
                 {!loading && !error && hasCases && (
-                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden -mt-4">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         <div className="modal-cases-list min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-                            <div className="flex flex-col gap-5 pb-1">
+                            <div className="flex flex-col gap-5 px-3 py-3">
                                 {Array.from(groupedByMonth.entries()).map(([key, items]) => (
-                                    <section key={key}>
-                                        <h3 className="mb-2 text-sm font-semibold text-foreground px-4 pt-4">
+                                    <section key={key} className="rounded-2xl border border-white/8 bg-white/2">
+                                        <h3 className="px-4 pt-4 text-sm font-semibold text-foreground">
                                             {getMonthYearLabel(items[0]?.createdAt)}
                                         </h3>
-                                        <div className="border-b border-border pb-2" aria-hidden />
-                                        <ul className="flex flex-col gap-0" role="list">
+                                        <div className="mx-4 mt-2 border-b border-white/8" aria-hidden />
+                                        <ul className="flex flex-col gap-1 p-2" role="list">
                                             {items.map((item) => (
                                                 <li key={item.id}>
                                                     <button
                                                         type="button"
                                                         onClick={() => handleCaseClick(item.id)}
-                                                        className="flex w-full cursor-pointer items-center gap-3 border-b border-border py-3 text-left transition-colors px-4 hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-inset last:border-b-0"
+                                                        className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-left transition-all duration-200 hover:border-white/10 hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-inset"
                                                     >
-                                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted/50">
-                                                            <FolderOpen className="size-5 text-muted-foreground" aria-hidden />
+                                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/4">
+                                                            <FolderOpen className="size-5 text-primary/75" aria-hidden />
                                                         </div>
                                                         <div className="min-w-0 flex-1">
-                                                            <span className="block truncate text-sm font-semibold text-foreground capitalize">
+                                                            <span className="block truncate text-base font-semibold text-foreground capitalize">
                                                                 {item.name || 'Sem nome'}
                                                             </span>
                                                             {(item.seeds?.length ?? 0) > 0 && (
-                                                                <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">
+                                                                <span className="mt-0.5 block font-mono text-[11px] text-white/45">
                                                                     {item.seeds!.length === 1
                                                                         ? truncateHash(item.seeds![0].txHash)
                                                                         : item.seeds!.map((s) => truncateHash(s.txHash)).join(', ')}
                                                                 </span>
                                                             )}
-                                                            <span className="mt-0.5 block text-xs text-muted-foreground">
+                                                            <span className="mt-1 block text-xs text-white/60">
                                                                 {formatCreatedAt(item.createdAt)}
                                                             </span>
                                                         </div>
                                                         <div className="shrink-0 text-right">
-                                                            <span className="text-sm font-semibold text-foreground">
-                                                                {item.totalAmountLostDecimal}
+                                                            <span className="text-[1.05rem] font-semibold tracking-tight text-foreground">
+                                                                {formatAmount(item.totalAmountLostDecimal)}
+                                                            </span>
+                                                            <span className="mt-0.5 flex items-center justify-end gap-1 text-[10px] uppercase tracking-[0.12em] text-primary/75">
+                                                                Ver
+                                                                <ChevronRight className="size-3" aria-hidden />
                                                             </span>
                                                         </div>
                                                     </button>
@@ -201,11 +205,11 @@ export function ModalCases({ open, onOpenChange }: MyCasesModalProps) {
                                 ))}
                             </div>
                         </div>
-                        <div className="border-t border-border px-4 py-4">
+                        <div className="border-t border-white/10 bg-[#0d1018]/90 px-4 py-4">
                             <Button
                                 type="button"
                                 onClick={handleCreateFirstCase}
-                                className="w-full cursor-pointer rounded-[6px] bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
+                                className="w-full cursor-pointer rounded-[8px] border border-primary/25 bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-[0_0_26px_-10px_rgba(74,126,217,0.8)] hover:bg-primary/90"
                             >
                                 Novo rastreamento
                             </Button>
@@ -214,16 +218,16 @@ export function ModalCases({ open, onOpenChange }: MyCasesModalProps) {
                 )}
 
                 {!loading && !error && !hasCases && (
-                    <div className="flex flex-1 flex-col items-center justify-center border-b border-border/50 px-5 py-10 text-center sm:py-14">
-                        <div className="mb-5 flex size-14 items-center justify-center rounded-[6px] border border-border bg-muted/30 sm:size-16">
-                            <FolderOpen className="size-7 text-muted-foreground sm:size-8" aria-hidden />
+                    <div className="flex flex-1 flex-col items-center justify-center border-b border-white/10 px-5 py-10 text-center sm:py-14">
+                        <div className="mb-5 flex size-14 items-center justify-center rounded-[10px] border border-white/12 bg-white/4 sm:size-16">
+                            <FolderOpen className="size-7 text-primary/75 sm:size-8" aria-hidden />
                         </div>
                         <h3 className="text-sm font-semibold text-foreground sm:text-base">Nenhum caso ainda</h3>
-                        <p className="mt-2 max-w-sm text-sm text-muted-foreground">Seus casos aparecerão aqui após serem criados.</p>
+                        <p className="mt-2 max-w-sm text-sm text-white/60">Seus casos aparecerão aqui após serem criados.</p>
                         <Button
                             type="button"
                             onClick={handleCreateFirstCase}
-                            className="mt-6 h-10 cursor-pointer rounded-[6px] bg-primary px-5 text-sm font-medium text-white hover:bg-primary/90"
+                            className="mt-6 h-10 cursor-pointer rounded-[8px] border border-primary/25 bg-primary px-5 text-sm font-medium text-white shadow-[0_0_26px_-10px_rgba(74,126,217,0.8)] hover:bg-primary/90"
                         >
                             Iniciar rastreamento
                         </Button>

@@ -7,7 +7,6 @@ import { useSession } from 'next-auth/react';
 import { AppHeader } from '@/components/common/appHeader';
 import { DashboardStats } from '@/components/dashboard/dashboard-stats';
 import { DashboardCaseCard } from '@/components/dashboard/dashboard-case-card';
-import { DashboardResources } from '@/components/dashboard/dashboard-resources';
 import { Button } from '@/components/ui/button';
 import { getUserDashboard } from '@/lib/services/users/get-user-dashboard.service';
 import { MOCK_DASHBOARD_CASES } from '@/lib/data/dashboard-mock-cases';
@@ -15,12 +14,34 @@ import type { DashboardCaseItem } from '@/lib/types/dashboard-case-item';
 import type { UserDashboardCaseEntry } from '@/lib/types/user-dashboard';
 import { Loader2, Plus, FolderOpen } from 'lucide-react';
 
+const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
 function formatAmountDisplay(valueUSD: string): string {
   const n = parseFloat(valueUSD);
   if (!Number.isFinite(n)) return valueUSD;
   if (n >= 0.01) return n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
   if (n === 0) return '0';
   return valueUSD;
+}
+
+function getMonthYearKey(iso: string | undefined): string {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  } catch {
+    return '—';
+  }
+}
+
+function getMonthYearLabel(iso: string | undefined): string {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+  } catch {
+    return '—';
+  }
 }
 
 function mapCaseHistoryToItems(entries: UserDashboardCaseEntry[]): DashboardCaseItem[] {
@@ -107,45 +128,65 @@ export function DashboardTemplate() {
   if (status === 'unauthenticated') return null;
 
   const displayName = session?.user?.name ?? session?.user?.email ?? 'usuário';
+  const firstName = displayName.split(' ')[0] || displayName;
+  const groupedByMonth = (() => {
+    if (!cases.length) return new Map<string, DashboardCaseItem[]>();
+    const map = new Map<string, DashboardCaseItem[]>();
+    for (const item of cases) {
+      const key = getMonthYearKey(item.createdAt);
+      const arr = map.get(key) ?? [];
+      arr.push(item);
+      map.set(key, arr);
+    }
+    const keys = Array.from(map.keys()).sort((a, b) => b.localeCompare(a));
+    const ordered = new Map<string, DashboardCaseItem[]>();
+    for (const k of keys) ordered.set(k, map.get(k)!);
+    return ordered;
+  })();
 
   return (
-    <div className="min-h-screen w-full overflow-auto bg-background">
-      <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} />
+    <div className="relative min-h-screen w-full overflow-auto bg-[#090b12]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_10%,rgba(74,126,217,0.14),transparent_58%),radial-gradient(ellipse_70%_55%_at_80%_90%,rgba(99,102,241,0.12),transparent_62%)]" />
+      <AppHeader meusCasosOpen={meusCasosOpen} onMeusCasosOpenChange={setMeusCasosOpen} hasCases={loading ? undefined : cases.length > 0} />
       <div className="h-14 shrink-0" aria-hidden />
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mb-8">
-          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Olá, {displayName.split(' ')[0] || displayName}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Aqui está o resumo da sua atividade e seus casos.
-          </p>
-        </div>
-
-        <div className="mb-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              size="lg"
-              className="h-11 rounded-[6px] bg-primary px-6 text-white hover:bg-primary/90"
-              asChild
-            >
-              <Link href="/dashboard/rastreio/novo">
-                <Plus className="mr-2 h-5 w-5" aria-hidden />
-                Novo rastreio
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-11 rounded-[6px]"
-              onClick={() => setMeusCasosOpen(true)}
-            >
-              <FolderOpen className="mr-2 h-5 w-5" aria-hidden />
-              Meus casos
-            </Button>
+      <main className="relative mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-9">
+        <section className="mb-7 rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(17,19,26,0.8),rgba(10,11,16,0.88))] p-5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] sm:p-6">
+          <div className="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[10px] font-semibold tracking-[0.16em] text-primary/90">
+                CENTRAL DE CASOS
+              </span>
+              <h1 className="mt-3 font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                Olá, {firstName}
+              </h1>
+              <p className="mt-1.5 text-sm text-white/65">
+                Acompanhe seu histórico, inicie novos rastreios e gerencie as investigações em andamento.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button
+                size="lg"
+                className="h-11 rounded-[8px] border border-primary/25 bg-primary px-6 text-white shadow-[0_0_28px_-10px_rgba(74,126,217,0.8)] hover:bg-primary/90"
+                asChild
+              >
+                <Link href="/dashboard/rastreio/novo">
+                  <Plus className="mr-2 h-5 w-5" aria-hidden />
+                  Novo rastreio
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-11 rounded-[8px] border-white/15 bg-white/4 text-foreground hover:bg-white/10"
+                onClick={() => setMeusCasosOpen(true)}
+              >
+                <FolderOpen className="mr-2 h-5 w-5" aria-hidden />
+                Meus casos
+              </Button>
+            </div>
           </div>
-        </div>
+        </section>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -166,30 +207,39 @@ export function DashboardTemplate() {
               />
             </section>
 
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
-              <section className="lg:col-span-2" aria-labelledby="cases-feed-heading">
-                <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="grid grid-cols-1 items-start gap-7">
+              <section aria-labelledby="cases-feed-heading">
+                <div className="mb-4 flex items-center justify-between gap-4">
                   <h2 id="cases-feed-heading" className="text-lg font-semibold text-foreground">
                     Meus casos
                   </h2>
                   {useMock && (
-                    <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                    <span className="rounded-full border border-amber-200/25 bg-amber-200/10 px-3 py-1 text-xs font-medium text-amber-200">
                       Dados de exemplo
                     </span>
                   )}
                 </div>
-                <ul className="space-y-4">
-                  {cases.map((item) => (
-                    <li key={item.id}>
-                      <DashboardCaseCard item={item} isMock={useMock} />
-                    </li>
+                <div className="space-y-5">
+                  {Array.from(groupedByMonth.entries()).map(([key, items]) => (
+                    <section key={key} className="rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(17,19,26,0.65),rgba(10,11,16,0.8))]">
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <h3 className="text-sm font-semibold text-foreground">
+                          {getMonthYearLabel(items[0]?.createdAt)}
+                        </h3>
+                        <span className="text-xs text-white/50">{items.length} {items.length === 1 ? 'caso' : 'casos'}</span>
+                      </div>
+                      <div className="mx-4 border-b border-white/10" aria-hidden />
+                      <ul className="space-y-3 p-3">
+                        {items.map((item) => (
+                          <li key={item.id}>
+                            <DashboardCaseCard item={item} isMock={useMock} />
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
                   ))}
-                </ul>
+                </div>
               </section>
-
-              <aside className="lg:col-span-1">
-                <DashboardResources />
-              </aside>
             </div>
           </>
         )}
