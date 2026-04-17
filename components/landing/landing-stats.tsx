@@ -6,7 +6,7 @@ import { AnimatedCounter } from './animated-counter';
 
 const STATS = [
     { type: 'counter' as const, end: 7, suffix: '+', formatThousands: false, label: 'Blockchains suportadas' },
-    { type: 'counter' as const, end: 9000, suffix: '+', formatThousands: true, label: 'Tokens rastreaveis' },
+    { type: 'counter' as const, end: 90000, suffix: '+', formatThousands: true, label: 'Tokens rastreaveis' },
     { type: 'text' as const, value: 'Rede', label: 'Inteligência on-chain' },
 ] as const;
 
